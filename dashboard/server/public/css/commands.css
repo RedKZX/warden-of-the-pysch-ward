@@ -1,1 +1,459 @@
+:root {
+    --primary-color: 124, 58, 237;
+    --success-color: 16, 185, 129;
+    --danger-color: 239, 68, 68;
+    --warning-color: 245, 158, 11;
+    --info-color: 59, 130, 246;
+}
 
+body {
+    background-image:
+        radial-gradient(circle at 100% 0%, rgba(var(--primary-color), 0.08) 0, transparent 25%),
+        radial-gradient(circle at 0% 80%, rgba(var(--info-color), 0.08) 0, transparent 25%);
+    background-attachment: fixed;
+}
+
+.command-card {
+    position: relative;
+    background: linear-gradient(165deg, rgba(26, 27, 35, 0.8), rgba(26, 27, 35, 0.6));
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(124, 58, 237, 0.15);
+    border-radius: 1rem;
+    padding: 1.25rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    animation: fadeIn 0.5s ease-out;
+}
+
+.command-card:hover {
+    transform: translateY(-4px) scale(1.01);
+    border-color: rgba(124, 58, 237, 0.35);
+    box-shadow: 0 8px 30px rgba(124, 58, 237, 0.2);
+    background: linear-gradient(165deg, rgba(26, 27, 35, 0.9), rgba(26, 27, 35, 0.7));
+}
+
+.command-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(8px);
+}
+
+.reload-btn,
+.view-btn {
+    background: rgba(124, 58, 237, 0.1);
+    color: rgb(167, 139, 250);
+    border: 1px solid rgba(124, 58, 237, 0.2);
+}
+
+.reload-btn:hover,
+.view-btn:hover {
+    background: rgba(124, 58, 237, 0.15);
+    transform: translateY(-2px);
+    border-color: rgba(124, 58, 237, 0.3);
+}
+
+.toggle-btn {
+    flex: 1;
+    background: rgba(16, 185, 129, 0.1);
+    color: rgb(16, 185, 129);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.toggle-btn:hover {
+    background: rgba(16, 185, 129, 0.15);
+    transform: translateY(-2px);
+}
+
+.toggle-btn.enabled {
+    background: rgba(239, 68, 68, 0.1);
+    color: rgb(239, 68, 68);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.toggle-btn.enabled:hover {
+    background: rgba(239, 68, 68, 0.15);
+}
+
+.settings-btn {
+    background: rgba(107, 114, 128, 0.1);
+    color: rgb(156, 163, 175);
+    border: 1px solid rgba(107, 114, 128, 0.2);
+    width: 42px;
+    height: 38px;
+}
+
+.settings-btn:hover {
+    background: rgba(107, 114, 128, 0.15);
+    transform: translateY(-2px);
+    border-color: rgba(107, 114, 128, 0.3);
+}
+
+.command-card.disabled {
+    opacity: 0.75;
+    filter: grayscale(0.3);
+    border-color: rgba(239, 68, 68, 0.2);
+    transform: scale(0.99);
+}
+
+.loading-spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modern-toast {
+    background: linear-gradient(165deg, rgba(26, 27, 35, 0.95), rgba(26, 27, 35, 0.85));
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(124, 58, 237, 0.2);
+    border-radius: 1rem;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+}
+
+.filter-buttons-wrapper {
+    position: relative;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: linear-gradient(165deg, rgba(26, 27, 35, 0.8), rgba(26, 27, 35, 0.6));
+    border: 1px solid rgba(124, 58, 237, 0.15);
+    border-radius: 1rem;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.filter-buttons-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: rgba(15, 15, 20, 0.5);
+    border-radius: 0.75rem;
+    border: 1px solid rgba(124, 58, 237, 0.1);
+}
+
+.filter-button {
+    position: relative;
+    padding: 0.75rem 1.25rem;
+    font-size: 0.875rem;
+    color: #9ca3af;
+    border-radius: 0.75rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(124, 58, 237, 0.1);
+    background: rgba(26, 27, 35, 0.6);
+    min-width: 120px;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.filter-button:hover {
+    border-color: rgba(124, 58, 237, 0.25);
+    background: rgba(124, 58, 237, 0.1);
+    transform: translateY(-1px);
+}
+
+.filter-button.active {
+    background: rgba(124, 58, 237, 0.15);
+    border-color: rgba(124, 58, 237, 0.3);
+    color: rgb(192, 173, 255);
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.1), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+@keyframes countBump {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+.filter-button[data-count]::after {
+    content: attr(data-count);
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: rgba(124, 58, 237, 0.2);
+    color: rgb(167, 139, 250);
+    padding: 0.25rem 0.5rem;
+    border-radius: 1rem;
+    font-size: 0.75rem;
+    border: 1px solid rgba(124, 58, 237, 0.3);
+    animation: countBump 0.3s ease;
+}
+
+.modern-swal-popup {
+    background: linear-gradient(165deg, rgba(26, 27, 35, 0.95), rgba(26, 27, 35, 0.85)) !important;
+    backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(124, 58, 237, 0.15) !important;
+    border-radius: 1rem !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.05) !important;
+}
+
+.modern-swal-title {
+    color: rgb(192, 173, 255) !important;
+    font-size: 1.5rem !important;
+    font-weight: 600 !important;
+    padding: 1.5rem 1.5rem 0.5rem !important;
+    border-bottom: 1px solid rgba(124, 58, 237, 0.15) !important;
+}
+
+.modern-swal-content {
+    padding: 1.5rem !important;
+}
+
+.settings-input {
+    background: rgba(15, 15, 20, 0.6) !important;
+    border: 1px solid rgba(124, 58, 237, 0.2) !important;
+    border-radius: 0.75rem !important;
+    color: #fff !important;
+    padding: 0.75rem 1rem !important;
+    transition: all 0.2s ease !important;
+    margin-top: 0.5rem !important;
+    font-size: 0.875rem !important;
+    backdrop-filter: blur(8px) !important;
+}
+
+.settings-input:hover {
+    border-color: rgba(124, 58, 237, 0.3) !important;
+    background: rgba(15, 15, 20, 0.7) !important;
+}
+
+.settings-input:focus {
+    border-color: rgba(124, 58, 237, 0.4) !important;
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.15) !important;
+    outline: none !important;
+}
+
+.form-group {
+    position: relative;
+    padding: 0.75rem;
+    background: rgba(15, 15, 20, 0.3);
+    border-radius: 0.75rem;
+    border: 1px solid rgba(124, 58, 237, 0.1);
+    margin-bottom: 1rem !important;
+}
+
+.form-checkbox {
+    appearance: none;
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 2px solid rgba(124, 58, 237, 0.3);
+    border-radius: 0.375rem;
+    background: rgba(15, 15, 20, 0.6);
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.form-checkbox:checked {
+    background: rgb(124, 58, 237);
+    border-color: rgb(124, 58, 237);
+}
+
+.form-checkbox:checked::after {
+    content: '✓';
+    position: absolute;
+    color: white;
+    font-size: 0.875rem;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.modern-swal-confirm {
+    background: linear-gradient(45deg, rgb(124, 58, 237), rgb(139, 92, 246)) !important;
+    border: none !important;
+    padding: 0.75rem 1.5rem !important;
+    border-radius: 0.75rem !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2) !important;
+}
+
+.modern-swal-confirm:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 16px rgba(124, 58, 237, 0.3) !important;
+}
+
+.modern-swal-cancel {
+    background: rgba(107, 114, 128, 0.1) !important;
+    border: 1px solid rgba(107, 114, 128, 0.2) !important;
+    color: rgb(156, 163, 175) !important;
+    padding: 0.75rem 1.5rem !important;
+    border-radius: 0.75rem !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease !important;
+}
+
+.modern-swal-cancel:hover {
+    background: rgba(107, 114, 128, 0.15) !important;
+    border-color: rgba(107, 114, 128, 0.3) !important;
+    transform: translateY(-1px) !important;
+}
+
+select.settings-input {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='rgba(124, 58, 237, 0.5)'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1.25rem;
+    padding-right: 2.5rem;
+}
+
+.form-group:hover {
+    border-color: rgba(124, 58, 237, 0.2);
+    background: rgba(15, 15, 20, 0.4);
+}
+
+.stat-card {
+    background: linear-gradient(165deg, rgba(26, 27, 35, 0.8), rgba(26, 27, 35, 0.6));
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(124, 58, 237, 0.15);
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    border-color: rgba(124, 58, 237, 0.3);
+}
+
+.stat-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 1rem;
+}
+
+.pulse-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.2rem;
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    background: linear-gradient(45deg, rgba(124, 58, 237, 0.1), rgba(139, 92, 246, 0.1));
+    color: rgb(167, 139, 250);
+    border: 1px solid rgba(124, 58, 237, 0.2);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.pulse-button:hover {
+    background: linear-gradient(45deg, rgba(124, 58, 237, 0.15), rgba(139, 92, 246, 0.15));
+    transform: translateY(-2px);
+    border-color: rgba(124, 58, 237, 0.3);
+}
+
+.pulse-button:active {
+    transform: translateY(0);
+}
+
+.pulse-button::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.7);
+    opacity: 0;
+    border-radius: 100%;
+    transform: scale(1, 1) translate(-50%, -50%);
+    transform-origin: 50% 50%;
+}
+
+.pulse-button:focus:not(:active)::after {
+    animation: ripple 1s ease-out;
+}
+
+@keyframes ripple {
+    0% {
+        transform: scale(0, 0);
+        opacity: 0.5;
+    }
+
+    100% {
+        transform: scale(20, 20);
+        opacity: 0;
+    }
+}
+
+.modal-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.2rem;
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(8px);
+}
+
+.modal-btn.reload-btn {
+    background: linear-gradient(45deg, rgba(124, 58, 237, 0.1), rgba(139, 92, 246, 0.1));
+    color: rgb(167, 139, 250);
+    border: 1px solid rgba(124, 58, 237, 0.2);
+}
+
+.modal-btn.reload-btn:hover {
+    background: linear-gradient(45deg, rgba(124, 58, 237, 0.15), rgba(139, 92, 246, 0.15));
+    transform: translateY(-2px);
+    border-color: rgba(124, 58, 237, 0.3);
+}
+
+.modal-btn.settings-btn {
+    background: rgba(107, 114, 128, 0.1);
+    color: rgb(156, 163, 175);
+    border: 1px solid rgba(107, 114, 128, 0.2);
+}
+
+.modal-btn.settings-btn:hover {
+    background: rgba(107, 114, 128, 0.15);
+    transform: translateY(-2px);
+    border-color: rgba(107, 114, 128, 0.3);
+}
+
+.modal-btn.cancel-btn {
+    background: rgba(239, 68, 68, 0.1);
+    color: rgb(239, 68, 68);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.modal-btn.cancel-btn:hover {
+    background: rgba(239, 68, 68, 0.15);
+    transform: translateY(-2px);
+    border-color: rgba(239, 68, 68, 0.3);
+}
