@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en" class="modern-scrollbar">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#111827">
+    <meta name="client-id" content="<%= client.user.id %>">
+    <title>Synapse Dashboard - Server Manager</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.2.96/css/materialdesignicons.min.css">
+    <link rel="stylesheet" href="/css/dashboard.css"/>
+    <link rel="stylesheet" href="/css/guilds.css"/>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"></script>
+    <script src="/js/dashboard.js" defer></script>
+    <script src="/js/guilds.js" defer></script>
+</head>
+
+<body class="bg-[#0a0a0f] text-gray-100">
+    <div class="flex min-h-screen">
+        <aside class="modern-sidebar modern-scrollbar">
+            <div class="sidebar-content">
+                <div class="sidebar-section">
+                    <div class="flex items-center space-x-4">
+                        <div class="relative">
+                            <img src="<%= client.user.displayAvatarURL() %>" alt="Bot Avatar"
+                                class="w-12 h-12 rounded-xl object-cover ring-2 ring-violet-500/20">
+                        </div>
+                        <div>
+                            <h2 class="font-semibold text-lg">
+                                <%= client.user.username %>
+                            </h2>
+                            <div class="bot-status">
+                                <span class="status-dot"></span>
+                                <span class="text-sm text-emerald-400">Online</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 space-y-4">
+                        <div class="stats-pair">
+                            <div class="stat-item">
+                                <div class="stat-icon">
+                                    <i class="mdi mdi-memory text-xl"></i>
+                                </div>
+                                <div class="stat-item-content">
+                                    <p>Memory Usage</p>
+                                    <p class="text-violet-400">
+                                        <%= stats.memoryUsage %>
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-icon">
+                                    <i class="mdi mdi-clock-outline text-xl"></i>
+                                </div>
+                                <div class="stat-item-content">
+                                    <p>Uptime</p>
+                                    <p class="text-emerald-400">
+                                        <%= stats.uptime %>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <nav class="nav-section">
+                    <h3 class="nav-header">BOT</h3>
+                    <div class="space-y-2">
+                        <a href="/" class="nav-item <%= path === '/' ? 'active' : '' %>">
+                            <i class="mdi mdi-view-dashboard"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="/guilds" class="nav-item <%= path === '/guilds' ? 'active' : '' %>">
+                            <i class="mdi mdi-server"></i>
+                            <span>Servers</span>
+                        </a>
+                        <a href="/commands" class="nav-item <%= path === '/commands' ? 'active' : '' %>">
+                            <i class="mdi mdi-lightning-bolt"></i>
+                            <span>Commands</span>
+                        </a>
+                    </div>
+
+                    <h3 class="nav-header mt-8">CORE</h3>
+                    <div class="space-y-2">
+                        <a href="/console" class="nav-item <%= path === '/settings' ? 'active' : '' %>">
+                            <i class="mdi mdi-console"></i>
+                            <span>Console</span>
+                        </a>
+                        <a href="/settings" class="nav-item <%= path === '/settings' ? 'active' : '' %>">
+                            <i class="mdi mdi-cog"></i>
+                            <span>Settings</span>
+                        </a>
+                        <a href="/logs" class="nav-item <%= path === '/logs' ? 'active' : '' %>">
+                            <i class="mdi mdi-text-box-outline"></i>
+                            <span>Logs</span>
+                        </a>
+                    </div>
+                </nav>
+            </div>
+
+            <div class="sidebar-bottom">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <p class="text-sm text-gray-400">Latency</p>
+                        <p class="text-emerald-400 font-semibold" id="ping-value">
+                            <%= client.ws.ping %>ms
+                        </p>
+                    </div>
+                    <div class="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-sm">
+                        Connected
+                    </div>
+                </div>
+                <button onclick="confirmShutdown()" class="shutdown-button">
+                    <i class="mdi mdi-power text-lg"></i>
+                    <span>Shutdown</span>
+                </button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="search-bar glass-morphism sticky top-0 z-50 rounded-2xl">
+                <div class="flex items-center justify-between w-full gap-4 px-6">
+                    <div class="flex-1 relative">
+                        <i class="mdi mdi-magnify absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xl"></i>
+                        <input type="text" id="guildSearch" placeholder="Search servers by name or ID..."
+                            class="w-full bg-[#1c1c25]/80 border border-[#2c2c35] rounded-xl px-12 py-4 text-white placeholder-gray-400 focus:border-violet-500/50 focus:bg-[#1c1c25] outline-none transition-all text-base">
+                        <kbd
+                            class="hidden sm:flex absolute right-4 top-1/2 -translate-y-1/2 px-2.5 py-1.5 text-xs font-medium text-gray-400 bg-[#13131a] border border-[#2c2c35] rounded-lg">/</kbd>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button id="refreshServers"
+                            class="flex items-center gap-2 px-5 py-3.5 bg-[#1c1c25]/80 hover:bg-[#1c1c25] border border-[#2c2c35] rounded-xl text-gray-300 hover:text-white transition-all group">
+                            <i
+                                class="mdi mdi-refresh text-xl group-hover:rotate-180 transition-transform duration-500"></i>
+                            <span class="hidden sm:inline font-medium">Refresh</span>
+                        </button>
+                        <button id="addBot"
+                            class="flex items-center gap-2 px-5 py-3.5 bg-violet-500/10 hover:bg-violet-500/20 border border-violet-500/20 text-violet-400 hover:text-violet-300 rounded-xl transition-all group">
+                            <i class="mdi mdi-plus text-xl group-hover:rotate-90 transition-transform"></i>
+                            <span class="hidden sm:inline font-medium">Add Bot</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+
+            <% if (!guilds || guilds.length === 0) { %>
+                <div class="empty-state-container flex flex-col items-center justify-center min-h-[60vh] text-center animate-fade-in" id="emptyState">
+                    <div class="empty-state-icon mb-8">
+                        <div class="w-32 h-32 rounded-full bg-gradient-to-br from-violet-500/20 to-blue-500/20 flex items-center justify-center mx-auto mb-6 border border-violet-500/10">
+                            <i class="mdi mdi-server-off text-6xl text-violet-400/60"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="empty-state-content max-w-lg">
+                        <h2 class="text-3xl font-bold text-white mb-4">No Servers Found</h2>
+                        <p class="text-gray-400 text-lg mb-8 leading-relaxed">
+                            Your bot isn't part of any Discord servers yet. Add it to a server to start managing communities and accessing powerful features.
+                        </p>
+                        
+                        <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                            <button id="addBotEmpty" 
+                                class="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-violet-500 to-violet-600 hover:from-violet-600 hover:to-violet-700 text-white rounded-xl transition-all transform hover:scale-105 shadow-lg hover:shadow-violet-500/25 font-semibold">
+                                <i class="mdi mdi-plus-circle text-xl"></i>
+                                Add Bot to Server
+                            </button>
+                            
+                            <button id="refreshEmpty"
+                                class="flex items-center gap-3 px-8 py-4 bg-[#1c1c25]/60 hover:bg-[#1c1c25] border border-[#2c2c35] hover:border-violet-500/30 text-gray-300 hover:text-white rounded-xl transition-all">
+                                <i class="mdi mdi-refresh text-xl"></i>
+                                Refresh
+                            </button>
+                        </div>
+                        
+                        <div class="mt-12 p-6 bg-[#13131a]/60 border border-[#2c2c35] rounded-xl">
+                            <h3 class="text-xl font-semibold text-white mb-3 flex items-center justify-center">
+                                <i class="mdi mdi-lightbulb-outline text-yellow-400 mr-2"></i>
+                                Getting Started
+                            </h3>
+                            <div class="space-y-3 text-gray-300">
+                                <div class="flex items-center">
+                                    <i class="mdi mdi-numeric-1-circle text-violet-400 mr-3"></i>
+                                    <span>Click "Add Bot to Server" to get your invite link</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="mdi mdi-numeric-2-circle text-violet-400 mr-3"></i>
+                                    <span>Share the link or visit it to add the bot</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="mdi mdi-numeric-3-circle text-violet-400 mr-3"></i>
+                                    <span>Return here to manage your servers</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <% } else { %>
+                <!-- Normal Stats Overview (when guilds exist) -->
+                <div class="stats-overview">
+                    <div class="stat-card animate-fade-in" style="animation-delay: 0.1s">
+                        <div class="flex items-center">
+                            <div class="p-3.5 rounded-xl bg-violet-500/20 stat-icon">
+                                <i class="mdi mdi-server text-2xl text-violet-400"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-gray-400 text-sm">Total Servers</p>
+                                <h3 class="text-3xl font-bold text-white"><span class="text-violet-400">
+                                        <%= stats && stats.guilds ? stats.guilds : guilds.length %>
+                                    </span></h3>
+                                <p class="text-xs text-violet-400/60 mt-1">Active now</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card animate-fade-in" style="animation-delay: 0.2s">
+                        <div class="flex items-center">
+                            <div class="p-3.5 rounded-xl bg-blue-500/20 stat-icon">
+                                <i class="mdi mdi-account-group text-2xl text-blue-400"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-gray-400 text-sm">Total Members</p>
+                                <h3 class="text-3xl font-bold text-white"><span class="text-blue-400">
+                                        <%= stats && stats.users ? stats.users.toLocaleString() : '0' %>
+                                    </span></h3>
+                                <p class="text-xs text-blue-400/60 mt-1">Across all servers</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card animate-fade-in" style="animation-delay: 0.3s">
+                        <div class="flex items-center">
+                            <div class="p-3.5 rounded-xl bg-emerald-500/20 stat-icon">
+                                <i class="mdi mdi-pound text-2xl text-emerald-400"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-gray-400 text-sm">Total Channels</p>
+                                <h3 class="text-3xl font-bold text-white"><span class="text-emerald-400">
+                                        <%= guilds && guilds.length > 0 ? guilds.reduce((acc, guild) => acc + (guild.channels || 0), 0).toLocaleString() : '0' %>
+                                    </span></h3>
+                                <p class="text-xs text-emerald-400/60 mt-1">Text & Voice</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card animate-fade-in" style="animation-delay: 0.4s">
+                        <div class="flex items-center">
+                            <div class="p-3.5 rounded-xl bg-yellow-500/20 stat-icon">
+                                <i class="mdi mdi-shield-star text-2xl text-yellow-400"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-gray-400 text-sm">Total Roles</p>
+                                <h3 class="text-3xl font-bold text-white"><span class="text-yellow-400">
+                                        <%= guilds && guilds.length > 0 ? guilds.reduce((acc, guild) => acc + (guild.roles || 0), 0).toLocaleString() : '0' %>
+                                    </span></h3>
+                                <p class="text-xs text-yellow-400/60 mt-1">Across all servers</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="additional-stats">
+                    <div class="stat-card animate-fade-in" style="animation-delay: 0.5s">
+                        <h4 class="text-gray-300 mb-5 font-medium text-lg">Channel Types</h4>
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center">
+                                    <i class="mdi mdi-message-text text-purple-400 mr-3"></i>
+                                    <span class="text-gray-300">Text Channels</span>
+                                </div>
+                                <span class="text-purple-400 font-semibold">
+                                    <%= guilds && guilds.length > 0 ? guilds.reduce((acc, guild) => acc + (guild.textChannels || 0), 0).toLocaleString() : '0' %>
+                                </span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center">
+                                    <i class="mdi mdi-microphone text-purple-400 mr-3"></i>
+                                    <span class="text-gray-300">Voice Channels</span>
+                                </div>
+                                <span class="text-purple-400 font-semibold">
+                                    <%= guilds && guilds.length > 0 ? guilds.reduce((acc, guild) => acc + (guild.voiceChannels || 0), 0).toLocaleString() : '0' %>
+                                </span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center">
+                                    <i class="mdi mdi-folder-outline text-purple-400 mr-3"></i>
+                                    <span class="text-gray-300">Categories</span>
+                                </div>
+                                <span class="text-purple-400 font-semibold">
+                                    <%= guilds && guilds.length > 0 ? guilds.reduce((acc, guild) => acc + (guild.categories || 0), 0).toLocaleString() : '0' %>
+                                </span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center">
+                                    <i class="mdi mdi-comment-multiple-outline text-purple-400 mr-3"></i>
+                                    <span class="text-gray-300">Threads</span>
+                                </div>
+                                <span class="text-purple-400 font-semibold">
+                                    <%= guilds && guilds.length > 0 ? guilds.reduce((acc, guild) => acc + (guild.threadChannels || 0), 0).toLocaleString() : '0' %>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card animate-fade-in" style="animation-delay: 0.6s">
+                        <h4 class="text-gray-300 mb-5 font-medium text-lg">Server Sizes</h4>
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center">
+                                    <i class="mdi mdi-chart-bubble text-blue-400 mr-3"></i>
+                                    <span class="text-gray-300">Small (< 100)</span>
+                                </div>
+                                <span class="text-blue-400 font-semibold">
+                                    <%= guilds && guilds.length > 0 ? guilds.filter(g => g.memberCount < 100).length : '0' %>
+                                </span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center">
+                                    <i class="mdi mdi-chart-bubble text-blue-400 mr-3"></i>
+                                    <span class="text-gray-300">Medium (100-1000)</span>
+                                </div>
+                                <span class="text-blue-400 font-semibold">
+                                    <%= guilds && guilds.length > 0 ? guilds.filter(g => g.memberCount >= 100 && g.memberCount < 1000).length : '0' %>
+                                </span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center">
+                                    <i class="mdi mdi-chart-bubble text-blue-400 mr-3"></i>
+                                    <span class="text-gray-300">Large (1000+)</span>
+                                </div>
+                                <span class="text-blue-400 font-semibold">
+                                    <%= guilds && guilds.length > 0 ? guilds.filter(g => g.memberCount >= 1000).length : '0' %>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card animate-fade-in" style="animation-delay: 0.7s">
+                        <h4 class="text-gray-300 mb-5 font-medium text-lg">Premium Features</h4>
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center">
+                                    <i class="mdi mdi-check-decagram text-green-400 mr-3"></i>
+                                    <span class="text-gray-300">Partnered</span>
+                                </div>
+                                <span class="text-green-400 font-semibold">
+                                    <%= guilds && guilds.length > 0 ? guilds.filter(g => g.partnered).length : '0' %>
+                                </span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center">
+                                    <i class="mdi mdi-shield-check text-green-400 mr-3"></i>
+                                    <span class="text-gray-300">Verified</span>
+                                </div>
+                                <span class="text-green-400 font-semibold">
+                                    <%= guilds && guilds.length > 0 ? guilds.filter(g => g.verified).length : '0' %>
+                                </span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center">
+                                    <i class="mdi mdi-star text-green-400 mr-3"></i>
+                                    <span class="text-gray-300">Premium Tier 3</span>
+                                </div>
+                                <span class="text-green-400 font-semibold">
+                                    <%= guilds && guilds.length > 0 ? guilds.filter(g => g.premiumTier === 3).length : '0' %>
+                                </span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center">
+                                    <i class="mdi mdi-rocket-launch text-green-400 mr-3"></i>
+                                    <span class="text-gray-300">Total Boosts</span>
+                                </div>
+                                <span class="text-green-400 font-semibold">
+                                    <%= guilds && guilds.length > 0 ? guilds.reduce((acc, guild) => acc + (guild.premiumSubscriptionCount || 0), 0).toLocaleString() : '0' %>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h2 class="text-2xl font-bold text-white mb-6 flex items-center">
+                    <i class="mdi mdi-server-network text-violet-400 mr-3"></i>
+                    Managed Servers <span class="text-gray-400 text-lg ml-3">(<%= guilds ? guilds.length : '0' %>)</span>
+                </h2>
+
+                <div class="guild-grid" id="guildContainer">
+                    <% guilds.forEach((guild, index)=> { %>
+                        <div class="guild-card animate-fade-in" style="animation-delay: <%= 0.1 * (index % 10) %>s"
+                            data-guild-id="<%= guild.id %>">
+                            <div class="card-header">
+                                <img src="<%= guild.icon %>" alt="<%= guild.name %>">
+                                <div class="overlay"></div>
+                                <button data-guild-leave-btn data-guild-id="<%= guild.id %>"
+                                    data-guild-name="<%= guild.name %>" class="leave-btn">
+                                    <i class="mdi mdi-exit-to-app text-xl"></i>
+                                </button>
+                                <div class="header-content">
+                                    <div>
+                                        <h3 class="font-bold text-xl text-white truncate">
+                                            <%= guild.name %>
+                                        </h3>
+                                        <div class="flex items-center text-sm text-gray-300 mt-1">
+                                            <i class="mdi mdi-pound text-violet-400 mr-1"></i>
+                                            <span class="truncate">
+                                                <%= guild.id %>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-content">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="flex items-center space-x-2">
+                                        <i class="mdi mdi-account-group text-violet-400 text-xl"></i>
+                                        <span class="text-sm text-gray-300">
+                                            <%= guild.memberCount.toLocaleString() %> members
+                                        </span>
+                                    </div>
+                                    <span
+                                        class="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-semibold status-badge active">
+                                        <i class="mdi mdi-circle text-xs mr-1"></i>Active
+                                    </span>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div class="stat-box">
+                                        <div class="flex items-center space-x-2 mb-1.5">
+                                            <i class="mdi mdi-text-box-multiple text-blue-400"></i>
+                                            <p class="text-sm font-medium text-gray-400">Channels</p>
+                                        </div>
+                                        <p class="text-lg font-bold text-white">
+                                            <%= guild.channels %>
+                                        </p>
+                                    </div>
+
+                                    <div class="stat-box">
+                                        <div class="flex items-center space-x-2 mb-1.5">
+                                            <i class="mdi mdi-shield-star text-yellow-400"></i>
+                                            <p class="text-sm font-medium text-gray-400">Roles</p>
+                                        </div>
+                                        <p class="text-lg font-bold text-white">
+                                            <%= guild.roles %>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-3 mt-3">
+                                    <div class="stat-box">
+                                        <div class="flex items-center space-x-2 mb-1.5">
+                                            <i class="mdi mdi-message-text text-violet-400"></i>
+                                            <p class="text-sm font-medium text-gray-400">Text</p>
+                                        </div>
+                                        <p class="text-lg font-bold text-white">
+                                            <%= guild.textChannels || 0 %>
+                                        </p>
+                                    </div>
+
+                                    <div class="stat-box">
+                                        <div class="flex items-center space-x-2 mb-1.5">
+                                            <i class="mdi mdi-microphone text-emerald-400"></i>
+                                            <p class="text-sm font-medium text-gray-400">Voice</p>
+                                        </div>
+                                        <p class="text-lg font-bold text-white">
+                                            <%= guild.voiceChannels || 0 %>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <% if (guild.premiumTier> 0 || guild.partnered || guild.verified) { %>
+                                    <div class="mt-4 pt-4 border-t border-gray-800">
+                                        <div class="flex flex-wrap gap-2">
+                                            <% if (guild.partnered) { %>
+                                                <span
+                                                    class="px-2.5 py-1.5 rounded-lg text-xs flex items-center font-medium partnered-badge">
+                                                    <i class="mdi mdi-check-decagram mr-1 text-blue-400"></i>
+                                                    <span class="text-blue-400">Partnered</span>
+                                                </span>
+                                                <% } %>
+                                                    <% if (guild.verified) { %>
+                                                        <span
+                                                            class="px-2.5 py-1.5 rounded-lg text-xs flex items-center font-medium verified-badge">
+                                                            <i class="mdi mdi-shield-check mr-1 text-green-400"></i>
+                                                            <span class="text-green-400">Verified</span>
+                                                        </span>
+                                                        <% } %>
+                                                            <% if (guild.premiumTier> 0) { %>
+                                                                <span
+                                                                    class="px-2.5 py-1.5 rounded-lg text-xs flex items-center font-medium premium-badge">
+                                                                    <i class="mdi mdi-star mr-1 text-violet-400"></i>
+                                                                    <span class="text-violet-400">Level <%=
+                                                                            guild.premiumTier %></span>
+                                                                </span>
+                                                                <% } %>
+                                        </div>
+                                    </div>
+                                    <% } %>
+                            </div>
+                        </div>
+                        <% }); %>
+                </div>
+            <% } %>
+        </main>
+    </div>
+
+    <div id="addBotModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center z-50">
+        <div
+            class="bg-[#13131a] rounded-2xl max-w-md w-full mx-4 p-6 border border-[#2c2c35] shadow-2xl animate-fade-in">
+            <div class="flex items-center justify-between mb-5">
+                <h2 class="text-2xl font-bold text-white flex items-center">
+                    <i class="mdi mdi-robot text-violet-400 mr-3"></i>
+                    Add Bot to Server
+                </h2>
+                <button id="closeModalBtn"
+                    class="text-gray-400 hover:text-white transition-colors p-2 rounded-full hover:bg-gray-800/50">
+                    <i class="mdi mdi-close text-xl"></i>
+                </button>
+            </div>
+            <p class="text-gray-300 mb-5">Use the link below to add the bot to your Discord server:</p>
+            <div class="bg-[#1c1c25] p-4 rounded-xl mb-5 border border-[#2c2c35]">
+                <p id="inviteLink" class="text-violet-400 break-all text-sm"></p>
+            </div>
+            <div class="flex justify-end gap-3">
+                <button id="copyLinkBtn"
+                    class="px-4 py-2.5 bg-violet-500/10 hover:bg-violet-500/20 border border-violet-500/20 text-violet-400 hover:text-violet-300 rounded-xl transition-all flex items-center">
+                    <i class="mdi mdi-content-copy mr-2"></i>Copy Link
+                </button>
+                <button id="closeModalBtn2"
+                    class="px-4 py-2.5 bg-gray-700/20 hover:bg-gray-700/30 border border-gray-700/30 text-gray-300 hover:text-gray-100 rounded-xl transition-all">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .animate-fade-in {
+            animation: fadeIn 0.6s ease-out forwards;
+            opacity: 0;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .empty-state-container {
+            animation: fadeIn 0.8s ease-out;
+        }
+        
+        .empty-state-icon {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+    </style>
+
+    <script>
+        let ws, reconnectAttempts = 0, maxReconnectAttempts = 5;
+        const isEmpty = document.getElementById('emptyState') !== null;
+        
+        function connectWebSocket() {
+            ws = new WebSocket(`ws://${window.location.host}/ws`);
+            ws.onopen = () => {
+                reconnectAttempts = 0;
+                const status = document.createElement('div');
+                status.id = 'ws-status';
+                status.className = 'fixed bottom-4 right-4 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-sm';
+                status.textContent = 'Connected';
+                document.body.appendChild(status);
+                setTimeout(() => status.remove(), 2000);
+            };
+            ws.onmessage = ({ data }) => {
+                try {
+                    const { type, data: stats } = JSON.parse(data);
+                    if (type === 'stats' && !isEmpty) {
+                        const { memoryUsage, uptime, ping } = stats;
+                        const memEl = document.querySelector('.stat-item:first-child .text-violet-400');
+                        const uptimeEl = document.querySelector('.stat-item:last-child .text-emerald-400');
+                        if (memEl) memEl.textContent = memoryUsage;
+                        if (uptimeEl) uptimeEl.textContent = uptime;
+                        const pingEl = document.getElementById('ping-value');
+                        if (pingEl) {
+                            pingEl.textContent = `${ping}ms`;
+                            pingEl.className = `font-semibold ${ping < 100 ? 'text-emerald-400' : ping < 300 ? 'text-yellow-400' : 'text-red-400'}`;
+                        }
+                    }
+                } catch (e) { }
+            };
+            ws.onclose = () => {
+                if (reconnectAttempts < maxReconnectAttempts) {
+                    reconnectAttempts++;
+                    setTimeout(connectWebSocket, 1000);
+                }
+            };
+        }
+        
+        connectWebSocket();
+        
+        // Modal functionality
+        const modal = document.getElementById('addBotModal');
+        const addBotBtn = document.getElementById('addBot');
+        const addBotEmptyBtn = document.getElementById('addBotEmpty');
+        const closeModalBtns = [document.getElementById('closeModalBtn'), document.getElementById('closeModalBtn2')];
+        const copyLinkBtn = document.getElementById('copyLinkBtn');
+        const refreshEmptyBtn = document.getElementById('refreshEmpty');
+        const refreshServersBtn = document.getElementById('refreshServers');
+        
+        // Show modal
+        function showModal() {
+            if (!modal) return;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            // Generate invite link (replace with your actual bot client ID)
+            const clientId = document.querySelector('meta[name="client-id"]')?.content || 'YOUR_BOT_CLIENT_ID';
+            const inviteLink = `https://discord.com/api/oauth2/authorize?client_id=${clientId}&permissions=8&scope=bot%20applications.commands`;
+            const linkEl = document.getElementById('inviteLink');
+            if (linkEl) linkEl.textContent = inviteLink;
+        }
+        
+        // Hide modal
+        function hideModal() {
+            if (!modal) return;
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+        
+        // Event listeners
+        if (addBotBtn) addBotBtn.addEventListener('click', showModal);
+        if (addBotEmptyBtn) addBotEmptyBtn.addEventListener('click', showModal);
+        
+        closeModalBtns.forEach(btn => {
+            if (btn) btn.addEventListener('click', hideModal);
+        });
+        
+        // Copy link functionality
+        if (copyLinkBtn) {
+            copyLinkBtn.addEventListener('click', async () => {
+                const linkEl = document.getElementById('inviteLink');
+                if (!linkEl) return;
+                const link = linkEl.textContent;
+                try {
+                    await navigator.clipboard.writeText(link);
+                    copyLinkBtn.innerHTML = '<i class="mdi mdi-check mr-2"></i>Copied!';
+                    setTimeout(() => {
+                        copyLinkBtn.innerHTML = '<i class="mdi mdi-content-copy mr-2"></i>Copy Link';
+                    }, 2000);
+                } catch (err) {
+                    // Fallback for browsers that don't support clipboard API
+                    const textArea = document.createElement('textarea');
+                    textArea.value = link;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    copyLinkBtn.innerHTML = '<i class="mdi mdi-check mr-2"></i>Copied!';
+                    setTimeout(() => {
+                        copyLinkBtn.innerHTML = '<i class="mdi mdi-content-copy mr-2"></i>Copy Link';
+                    }, 2000);
+                }
+            });
+        }
+        
+        // Refresh functionality
+        function refreshPage() {
+            const refreshIcon = document.querySelector('#refreshServers i, #refreshEmpty i');
+            if (refreshIcon) {
+                refreshIcon.classList.add('rotate-180');
+                setTimeout(() => refreshIcon.classList.remove('rotate-180'), 500);
+            }
+            setTimeout(() => window.location.reload(), 500);
+        }
+        
+        if (refreshServersBtn) refreshServersBtn.addEventListener('click', refreshPage);
+        if (refreshEmptyBtn) refreshEmptyBtn.addEventListener('click', refreshPage);
+        
+        // Close modal when clicking outside
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) hideModal();
+            });
+        }
+        
+        // Search functionality (only if guilds exist)
+        const searchInput = document.getElementById('guildSearch');
+        if (searchInput && !isEmpty) {
+            searchInput.addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                const guildCards = document.querySelectorAll('.guild-card');
+                
+                guildCards.forEach(card => {
+                    const guildName = card.querySelector('h3')?.textContent?.toLowerCase() || '';
+                    const guildId = card.dataset.guildId || '';
+                    
+                    if (guildName.includes(searchTerm) || guildId.includes(searchTerm)) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+            
+            // Keyboard shortcut for search
+            document.addEventListener('keydown', (e) => {
+                if (e.key === '/' && !e.ctrlKey && !e.metaKey && document.activeElement !== searchInput) {
+                    e.preventDefault();
+                    searchInput.focus();
+                }
+            });
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => 
+            setTimeout(() => document.body.style.transition = 'opacity .3s', 100)
+        );
+    </script>
+</body>
+</html>
