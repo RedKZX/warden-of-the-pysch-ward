@@ -75,7 +75,7 @@ async function verify2FA() {
     const prompt = require('./utils/Helpers/Prompt');
     while (true) {
         console.log('\n\x1b[1;30m╔════════════════════════════════╗');
-        console.log('\x1b[1;30m║  \x1b[1;35mSYNAPSE BOT TWO FACTOR  \x1b[1;30m║');
+        console.log('\x1b[1;30m║  \x1b[1;35mWARDEN BOT TWO FACTOR  \x1b[1;30m║');
         console.log('\x1b[1;30m╚════════════════════════════════╝\x1b[0m');
 
         const code = await prompt('\x1b[38;2;138;43;226mPlease enter your 2FA code: \x1b[1;37m');
