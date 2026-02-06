@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en" class="modern-scrollbar">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#111827" />
+    <title>Synapse Dashboard - Commands</title>
+    <style>
+        body{opacity:0;background:#0a0a0f;color:#f3f4f6}
+        .modern-sidebar{width:280px;position:fixed;height:100vh;background:#111827}
+        .modern-scrollbar{scrollbar-width:thin;scrollbar-color:#374151 transparent}
+        .command-card{background:rgba(31,41,55,.5);backdrop-filter:blur(8px)}
+    </style>
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.2.96/css/materialdesignicons.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="/css/commands.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="/css/dashboard.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <script defer src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script defer src="/js/commands.js"></script>
+    <noscript>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.2.96/css/materialdesignicons.min.css">
+        <link rel="stylesheet" href="/css/commands.css">
+        <link rel="stylesheet" href="/css/dashboard.css">
+    </noscript>
+    <link rel="icon" type="image/png" href="/images/favicon.png">
+</head>
+
+<body class="bg-[#0a0a0f] text-gray-100" onload="document.body.style.opacity='1'">
+    <aside class="modern-sidebar modern-scrollbar">
+        <div class="sidebar-content">
+            <div class="sidebar-section">
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <img src="<%= client.user.displayAvatarURL() %>" alt="Bot Avatar"
+                            class="w-12 h-12 rounded-xl object-cover ring-2 ring-violet-500/20">
+                    </div>
+                    <div>
+                        <h2 class="font-semibold text-lg">
+                            <%= client.user.username %>
+                        </h2>
+                        <div class="bot-status">
+                            <span class="status-dot"></span>
+                            <span class="text-sm text-emerald-400">Online</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 space-y-4">
+                    <div class="stats-pair">
+                        <div class="stat-item">
+                            <div class="stat-icon">
+                                <i class="mdi mdi-memory text-xl"></i>
+                            </div>
+                            <div class="stat-item-content">
+                                <p>Memory Usage</p>
+                                <p class="text-violet-400">
+                                    <%= stats.memoryUsage %>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-icon">
+                                <i class="mdi mdi-clock-outline text-xl"></i>
+                            </div>
+                            <div class="stat-item-content">
+                                <p>Uptime</p>
+                                <p class="text-emerald-400">
+                                    <%= stats.uptime %>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="nav-section">
+                <h3 class="nav-header">BOT</h3>
+                <div class="space-y-2">
+                    <a href="/" class="nav-item <%= path === '/' ? 'active' : '' %>">
+                        <i class="mdi mdi-view-dashboard"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="/guilds" class="nav-item <%= path === '/guilds' ? 'active' : '' %>">
+                        <i class="mdi mdi-server"></i>
+                        <span>Servers</span>
+                    </a>
+                    <a href="/commands" class="nav-item <%= path === '/commands' ? 'active' : '' %>">
+                        <i class="mdi mdi-lightning-bolt"></i>
+                        <span>Commands</span>
+                    </a>
+                </div>
+
+                <h3 class="nav-header mt-8">CORE</h3>
+                <div class="space-y-2">
+                    <a href="/console" class="nav-item <%= path === '/settings' ? 'active' : '' %>">
+                        <i class="mdi mdi-console"></i>
+                        <span>Console</span>
+                    </a>
+                    <a href="/settings" class="nav-item <%= path === '/settings' ? 'active' : '' %>">
+                        <i class="mdi mdi-cog"></i>
+                        <span>Settings</span>
+                    </a>
+                    <a href="/logs" class="nav-item <%= path === '/logs' ? 'active' : '' %>">
+                        <i class="mdi mdi-text-box-outline"></i>
+                        <span>Logs</span>
+                    </a>
+                </div>
+            </nav>
+        </div>
+
+        <div class="sidebar-bottom">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <p class="text-sm text-gray-400">Latency</p>
+                    <p class="text-emerald-400 font-semibold" id="ping-value">
+                        <%= client.ws.ping %>ms
+                    </p>
+                </div>
+                <div class="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-sm">
+                    Connected
+                </div>
+            </div>
+            <button onclick="confirmShutdown()" class="shutdown-button">
+                <i class="mdi mdi-power text-lg"></i>
+                <span>Shutdown</span>
+            </button>
+        </div>
+    </aside>
+
+    <main class="flex-1 modern-scrollbar ml-[280px]">
+        <nav class="h-16 border-b border-[#1c1c25] sticky top-0 bg-[#13131a]/80 backdrop-blur-md z-10">
+            <div class="flex items-center justify-between h-full px-6">
+                <button class="lg:hidden modern-button" onclick="toggleSidebar()">
+                    <i class="mdi mdi-menu"></i>
+                </button>
+            </div>
+        </nav>
+
+        <div class="main-content p-6">
+            <section class="content-section modern-card">
+                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
+                    <div class="flex items-center">
+                        <i class="mdi mdi-lightning-bolt text-3xl text-violet-400 mr-3"></i>
+                        <div>
+                            <h2
+                                class="text-2xl font-bold bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent">
+                                Command Management
+                            </h2>
+                            <p class="text-sm text-gray-400">Manage and control your bot's commands</p>
+                        </div>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
+                        <div class="relative flex-1 lg:flex-none search-wrapper">
+                            <input type="text" id="searchCommands" placeholder="Search commands..."
+                                class="search-input w-full lg:w-64 px-4 py-2 pl-10 rounded-lg" />
+                            <i class="mdi mdi-magnify absolute left-3 top-2.5 text-gray-400"></i>
+                        </div>
+                        <button id="refreshAllCommands" class="pulse-button">
+                            <i class="mdi mdi-refresh"></i><span>Refresh All</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="stat-cards grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="stat-card active p-4 rounded-xl">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="text-sm font-medium text-gray-400">Active Commands</p>
+                                <h3 class="text-2xl font-bold text-emerald-400" id="active-commands-count">0</h3>
+                            </div>
+                            <div class="stat-icon bg-emerald-500/20 text-emerald-400">
+                                <i class="mdi mdi-check-circle-outline text-2xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card disabled p-4 rounded-xl">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="text-sm font-medium text-gray-400">Disabled Commands</p>
+                                <h3 class="text-2xl font-bold text-red-400" id="disabled-commands-count">0</h3>
+                            </div>
+                            <div class="stat-icon bg-red-500/20 text-red-400">
+                                <i class="mdi mdi-close-circle-outline text-2xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card categories p-4 rounded-xl">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="text-sm font-medium text-gray-400">Command Categories</p>
+                                <h3 class="text-2xl font-bold text-violet-400" id="category-count">0</h3>
+                            </div>
+                            <div class="stat-icon bg-violet-500/20 text-violet-400">
+                                <i class="mdi mdi-tag-multiple-outline text-2xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <input type="hidden" id="commandStates" value="<%= JSON.stringify(commandStates) %>">
+
+                <div class="filter-buttons-wrapper">
+                    <div class="filter-buttons-container">
+                        <button onclick="filterCommands('all')" class="filter-button active"
+                            data-count="<%= commands.length %>">
+                            <span class="button-content">
+                                <i class="mdi mdi-lightning-bolt"></i>All Commands
+                            </span>
+                            <div class="button-background"></div>
+                        </button>
+                        <% const categories=[...new Set(commands.map(cmd=> cmd.category))]; %>
+                            <% categories.forEach(category=> { %>
+                                <% const count=commands.filter(cmd=> cmd.category === category).length; %>
+                                    <button onclick="filterCommands('<%= category %>')" class="filter-button"
+                                        data-category="<%= category %>" data-count="<%= count %>">
+                                        <span class="button-content">
+                                            <i class="mdi <%= getCategoryIcon(category) %>"></i>
+                                            <%= category.charAt(0).toUpperCase() + category.slice(1) %>
+                                        </span>
+                                        <div class="button-background"></div>
+                                    </button>
+                                    <% }); %>
+                    </div>
+                </div>
+
+                <div id="commands-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <% commands.forEach(command=> { %>
+                        <div class="command-card glass-morphism rounded-xl p-4" data-category="<%= command.category %>"
+                            data-name="<%= command.name %>" data-path="<%= command.path %>">
+                            <div class="flex justify-between items-start mb-3">
+                                <div>
+                                    <h3 class="text-lg font-semibold text-white">/<%= command.name %>
+                                    </h3>
+                                    <p class="text-sm text-gray-400">
+                                        <%= command.description %>
+                                    </p>
+                                </div>
+                                <span
+                                    class="px-2.5 py-1 text-xs rounded-full <%= getCategoryClass(command.category) %>">
+                                    <%= command.category %>
+                                </span>
+                            </div>
+
+                            <div class="mt-4 space-y-2 text-sm">
+                                <div class="flex items-center text-gray-400">
+                                    <i class="mdi mdi-clock-outline mr-2"></i>
+                                    <span class="cooldown">Cooldown: <%= command.cooldown || 0 %>s</span>
+                                </div>
+                                <div class="flex items-center text-gray-400">
+                                    <i class="mdi mdi-shield-check mr-2"></i>
+                                    <span class="permission">Permission: <%= command.permission || 'None' %></span>
+                                </div>
+                                <div class="flex items-center text-gray-400">
+                                    <i class="mdi mdi-folder-outline mr-2"></i>
+                                    <span class="path">Path: <%= command.path %></span>
+                                </div>
+                                <div class="flex items-center text-gray-400">
+                                    <i class="mdi mdi-code-tags mr-2"></i>
+                                    <span class="usage">Usage: /<%= command.name %>
+                                            <%= command.options ? command.options.map(opt=> `<${opt.name}>`).join(' ') :
+                                                    '' %></span>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-wrap gap-2 mt-4">
+                                <% if (command.guildOnly) { %>
+                                    <span class="px-2 py-1 text-xs rounded-full bg-blue-500/10 text-blue-400">
+                                        <i class="mdi mdi-server mr-1"></i>Server Only
+                                    </span>
+                                    <% } %>
+                                        <% if (command.ownerOnly) { %>
+                                            <span
+                                                class="px-2 py-1 text-xs rounded-full bg-purple-500/10 text-purple-400">
+                                                <i class="mdi mdi-crown mr-1"></i>Owner Only
+                                            </span>
+                                            <% } %>
+                                                <span
+                                                    class="px-2 py-1 text-xs rounded-full bg-gray-500/10 text-gray-400">
+                                                    <i class="mdi mdi-calendar-check mr-1"></i>Updated <%= new
+                                                        Date(command.updatedAt || Date.now()).toLocaleDateString() %>
+                                                </span>
+                            </div>
+
+                            <div class="command-actions flex gap-2 mt-4">
+                                <button onclick="showCommandDetails('<%= command.name %>')" class="command-btn view-btn"
+                                    data-tooltip="View command details">
+                                    <i class="mdi mdi-eye"></i><span>View</span>
+                                </button>
+                                <button onclick="toggleCommandState(this, '<%= command.name %>')"
+                                    class="command-btn toggle-btn <%= command.enabled ? 'enabled' : 'disabled' %>"
+                                    data-tooltip="Toggle command state">
+                                    <i class="mdi mdi-power"></i>
+                                    <span>
+                                        <%= command.enabled ? 'Disable' : 'Enable' %>
+                                    </span>
+                                </button>
+                                <button onclick="showCommandSettings('<%= command.name %>')"
+                                    class="command-btn settings-btn" data-tooltip="Command settings">
+                                    <i class="mdi mdi-cog"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <% }); %>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <div id="commandDetailsModal" class="fixed inset-0 z-50 hidden overflow-y-auto flex items-center justify-center">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeCommandDetails()"></div>
+        <div
+            class="relative w-full max-w-2xl p-6 mx-auto bg-[#13131a] rounded-xl shadow-2xl border border-violet-500/20 transform transition-all">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent"
+                    id="modalCommandName">/command</h3>
+                <button onclick="closeCommandDetails()" class="text-gray-400 hover:text-white">
+                    <i class="mdi mdi-close text-xl"></i>
+                </button>
+            </div>
+            <div class="space-y-4" id="modalContent"></div>
+        </div>
+    </div>
+
+    <script src="/js/commands.js"></script>
+    <script>
+        const ws = new WebSocket(`ws://${window.location.host}/ws`);
+        
+        ws.onopen = () => {
+            const status = document.createElement('div');
+            status.id = 'ws-status';
+            status.className = 'fixed bottom-4 right-4 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-sm';
+            status.textContent = 'Connected to WebSocket';
+            document.body.appendChild(status);
+            setTimeout(() => status.remove(), 3000);
+        };
+
+        ws.onmessage = (event) => {
+            try {
+                const { type, data } = JSON.parse(event.data);
+                if (type === 'stats') {
+                    const { memoryUsage, uptime, ping } = data;
+                    document.querySelector('.stat-item:first-child .text-violet-400').textContent = memoryUsage;
+                    document.querySelector('.stat-item:last-child .text-emerald-400').textContent = uptime;
+                    
+                    const pingElement = document.getElementById('ping-value');
+                    pingElement.textContent = `${ping}ms`;
+                    pingElement.className = `font-semibold ${
+                        ping < 100 ? 'text-emerald-400' : 
+                        ping < 300 ? 'text-yellow-400' : 
+                        'text-red-400'
+                    }`;
+                }
+            } catch (error) {
+                console.error("Error parsing WebSocket message:", error);
+            }
+        };
+
+        ws.onclose = () => {
+            console.log("WebSocket connection closed, attempting to reconnect...");
+            setTimeout(() => window.location.reload(), 5000);
+        };
+    </script>
+</body>
+</html>
