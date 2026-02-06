@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en" class="modern-scrollbar">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#111827" />
+    <title>Synapse Dashboard - Settings</title>
+    <style>
+        body{opacity:0;background:#0a0a0f;color:#f3f4f6}
+        .modern-sidebar{width:280px;position:fixed;height:100vh;background:#111827}
+        .modern-scrollbar{scrollbar-width:thin;scrollbar-color:#374151 transparent}
+        .settings-grid{display:grid;gap:1.5rem;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+        .settings-card{background:#1f2937;border-radius:0.75rem;padding:1.5rem}
+        .card-header{display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem}
+    </style>
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.2.96/css/materialdesignicons.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="/css/dashboard.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="/css/settings.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <script defer src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <noscript>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.2.96/css/materialdesignicons.min.css">
+        <link rel="stylesheet" href="/css/dashboard.css">
+        <link rel="stylesheet" href="/css/settings.css">
+    </noscript>
+</head>
+
+<body class="bg-[#0a0a0f] text-gray-100" onload="document.body.style.opacity='1'">
+    <div class="flex min-h-screen">
+        <aside class="modern-sidebar modern-scrollbar">
+            <div class="sidebar-content">
+                <div class="sidebar-section">
+                    <div class="flex items-center space-x-4">
+                        <div class="relative">
+                            <img src="<%= client.user.displayAvatarURL() %>" alt="Bot Avatar"
+                                class="w-12 h-12 rounded-xl object-cover ring-2 ring-violet-500/20">
+                        </div>
+                        <div>
+                            <h2 class="font-semibold text-lg">
+                                <%= client.user.username %>
+                            </h2>
+                            <div class="bot-status">
+                                <span class="status-dot"></span>
+                                <span class="text-sm text-emerald-400">Online</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 space-y-4">
+                        <div class="stats-pair">
+                            <div class="stat-item">
+                                <div class="stat-icon">
+                                    <i class="mdi mdi-memory text-xl"></i>
+                                </div>
+                                <div class="stat-item-content">
+                                    <p>Memory Usage</p>
+                                    <p class="text-violet-400">
+                                        <%= stats.memoryUsage %>
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-icon">
+                                    <i class="mdi mdi-clock-outline text-xl"></i>
+                                </div>
+                                <div class="stat-item-content">
+                                    <p>Uptime</p>
+                                    <p class="text-emerald-400">
+                                        <%= stats.uptime %>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <nav class="nav-section">
+                    <h3 class="nav-header">BOT</h3>
+                    <div class="space-y-2">
+                        <a href="/" class="nav-item <%= path === '/' ? 'active' : '' %>">
+                            <i class="mdi mdi-view-dashboard"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="/guilds" class="nav-item <%= path === '/guilds' ? 'active' : '' %>">
+                            <i class="mdi mdi-server"></i>
+                            <span>Servers</span>
+                        </a>
+                        <a href="/commands" class="nav-item <%= path === '/commands' ? 'active' : '' %>">
+                            <i class="mdi mdi-lightning-bolt"></i>
+                            <span>Commands</span>
+                        </a>
+                    </div>
+
+                    <h3 class="nav-header mt-8">CORE</h3>
+                    <div class="space-y-2">
+                        <a href="/console" class="nav-item <%= path === '/console' ? 'active' : '' %>">
+                            <i class="mdi mdi-console"></i>
+                            <span>Console</span>
+                        </a>
+                        <a href="/settings" class="nav-item <%= path === '/settings' ? 'active' : '' %>">
+                            <i class="mdi mdi-cog"></i>
+                            <span>Settings</span>
+                        </a>
+                        <a href="/logs" class="nav-item <%= path === '/logs' ? 'active' : '' %>">
+                            <i class="mdi mdi-text-box-outline"></i>
+                            <span>Logs</span>
+                        </a>
+                    </div>
+                </nav>
+            </div>
+
+            <div class="sidebar-bottom">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <p class="text-sm text-gray-400">Latency</p>
+                        <p class="text-emerald-400 font-semibold" id="ping-value">
+                            <%= client.ws.ping %>ms
+                        </p>
+                    </div>
+                    <div class="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-sm">
+                        Connected
+                    </div>
+                </div>
+                <button onclick="confirmShutdown()" class="shutdown-button">
+                    <i class="mdi mdi-power text-lg"></i>
+                    <span>Shutdown</span>
+                </button>
+            </div>
+        </aside>
+
+        <main class="flex-1 ml-[280px] h-screen overflow-y-auto modern-scrollbar">
+            <div class="p-6 space-y-6">
+                <div class="settings-header">
+                    <div class="flex items-center space-x-6">
+                        <div class="header-icon-wrapper">
+                            <i class="mdi mdi-cog-sync text-4xl"></i>
+                        </div>
+                        <div>
+                            <h1 class="settings-title">Dashboard Settings</h1>
+                            <p class="settings-subtitle">Configure your bot's global settings and preferences</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tabs-container">
+                    <div class="tabs-header">
+                        <button class="tab-button active" data-tab="general">
+                            <i class="mdi mdi-tune"></i>
+                            <span>General</span>
+                        </button>
+                        <button class="tab-button" data-tab="system">
+                            <i class="mdi mdi-desktop-tower-monitor"></i>
+                            <span>System</span>
+                        </button>
+                        <button class="tab-button" data-tab="users">
+                            <i class="mdi mdi-account-multiple"></i>
+                            <span>Users</span>
+                        </button>
+                        <button class="tab-button" data-tab="security">
+                            <i class="mdi mdi-shield-lock"></i>
+                            <span>Security</span>
+                        </button>
+                        <button class="tab-button" data-tab="database">
+                            <i class="mdi mdi-database"></i>
+                            <span>Database</span>
+                        </button>
+                    </div>
+
+                    <div class="tabs-content">
+                        <!-- General Tab -->
+                        <div id="general-tab" class="tab-content">
+                            <div class="settings-grid">
+                                <div class="settings-card feature-card" data-card="features">
+                                    <div class="card-header">
+                                        <div class="card-icon-wrapper">
+                                            <i class="mdi mdi-toggle-switch text-2xl"></i>
+                                        </div>
+                                        <h2 class="card-title">Feature Toggles</h2>
+                                    </div>
+                                    <div class="toggle-container">
+                                        <div class="toggle-item" data-feature="hotReload">
+                                            <div>
+                                                <h3 class="toggle-title">Hot Reload</h3>
+                                                <p class="toggle-description">Auto-reload on file changes</p>
+                                            </div>
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" id="hotReloadEnabled">
+                                                <span class="slider">
+                                                    <span class="slider-circle"></span>
+                                                </span>
+                                            </label>
+                                        </div>
+
+                                        <div class="toggle-item" data-feature="webDashboard">
+                                            <div>
+                                                <h3 class="toggle-title">Web Dashboard</h3>
+                                                <p class="toggle-description">Enable web dashboard access for server
+                                                    administrators</p>
+                                                <div id="dashboardWarning" class="toggle-warning">
+                                                    <i class="mdi mdi-alert-circle"></i>
+                                                    <span>Warning: Disabling the dashboard will be permanent unless you
+                                                        delete the
+                                                        settings database</span>
+                                                </div>
+                                            </div>
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" id="webDashboardEnabled">
+                                                <span class="slider">
+                                                    <span class="slider-circle"></span>
+                                                </span>
+                                            </label>
+                                        </div>
+
+                                        <div class="toggle-item" data-feature="commandLogs">
+                                            <div>
+                                                <h3 class="toggle-title">Command Logs</h3>
+                                                <p class="toggle-description">Track command usage, errors, and performance
+                                                    metrics</p>
+                                            </div>
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" id="commandLogsEnabled">
+                                                <span class="slider">
+                                                    <span class="slider-circle"></span>
+                                                </span>
+                                            </label>
+                                        </div>
+
+                                        <div class="toggle-item" data-feature="database">
+                                            <div>
+                                                <h3 class="toggle-title">Database System</h3>
+                                                <p class="toggle-description">Enable dual MongoDB/SQL File loader</p>
+                                            </div>
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" id="databaseEnabled">
+                                                <span class="slider">
+                                                    <span class="slider-circle"></span>
+                                                </span>
+                                            </label>
+                                        </div>
+
+                                        <div class="toggle-item" data-feature="maintenance">
+                                            <div>
+                                                <h3 class="toggle-title">Maintenance Mode</h3>
+                                                <p class="toggle-description">Disable commands and show maintenance message
+                                                </p>
+                                            </div>
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" id="maintenanceModeEnabled">
+                                                <span class="slider">
+                                                    <span class="slider-circle"></span>
+                                                </span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="settings-card performance-card" data-card="performance">
+                                    <div class="card-header">
+                                        <div class="card-icon-wrapper blue-gradient">
+                                            <i class="mdi mdi-speedometer text-2xl"></i>
+                                        </div>
+                                        <h2 class="card-title">Performance</h2>
+                                    </div>
+                                    <div class="setting-fields">
+                                        <div class="setting-group">
+                                            <label class="setting-label">Command Rate Limit</label>
+                                            <div class="input-group">
+                                                <input type="number" id="commandRateLimit" class="modern-input" min="0"
+                                                    max="300" value="60">
+                                                <span class="input-suffix">per minute</span>
+                                            </div>
+                                            <p class="setting-hint">Maximum number of commands allowed per user in one
+                                                minute</p>
+                                        </div>
+
+                                        <div class="setting-group">
+                                            <label class="setting-label">Global Command Cooldown</label>
+                                            <div class="input-group">
+                                                <input type="number" id="globalCommandCooldown" class="modern-input" min="0"
+                                                    max="60" value="3">
+                                                <span class="input-suffix">seconds</span>
+                                            </div>
+                                            <p class="setting-hint">Default cooldown period between command executions</p>
+                                        </div>
+
+                                        <div class="setting-group">
+                                            <label class="setting-label">Auto-Recovery Attempts</label>
+                                            <div class="input-group">
+                                                <input type="number" id="autoRecoveryAttempts" class="modern-input" min="0"
+                                                    max="10" value="3">
+                                                <span class="input-suffix">tries</span>
+                                            </div>
+                                            <p class="setting-hint">Number of attempts to recover from crashes before
+                                                shutdown</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- System Tab -->
+                        <div id="system-tab" class="tab-content hidden">
+                            <div class="settings-grid">
+                                <div class="settings-card" data-card="status">
+                                    <div class="card-header">
+                                        <div class="card-icon-wrapper green-gradient">
+                                            <i class="mdi mdi-robot text-2xl"></i>
+                                        </div>
+                                        <h2 class="card-title">Bot Status</h2>
+                                    </div>
+                                    <div class="setting-fields">
+                                        <div class="warning-card">
+                                            <div class="warning-card-inner">
+                                                <div class="warning-icon">
+                                                    <i class="mdi mdi-alert"></i>
+                                                </div>
+                                                <div class="warning-content">
+                                                    <span class="warning-text">Restart Required For Status Changes To Take Effect</span>
+                                                    <span class="warning-subtext">Changes will be saved immediately but won't be visible until bot restart</span>
+                                                    <span class="warning-subtext">Status indicators such as DND, IDLE, ONLINE, or INVISIBLE will be updated immediately</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="setting-group">
+                                            <label class="setting-label">Custom Status Text</label>
+                                            <input type="text" id="customStatusText" class="modern-input"
+                                                placeholder="e.g. with slash commands">
+                                            <p class="setting-hint">Text displayed in the bot's status</p>
+                                        </div>
+
+                                        <div class="setting-group">
+                                            <label class="setting-label">Status Type</label>
+                                            <select id="customStatusType" class="modern-select">
+                                                <option value="PLAYING">Playing</option>
+                                                <option value="WATCHING">Watching</option>
+                                                <option value="LISTENING">Listening to</option>
+                                                <option value="STREAMING">Streaming</option>
+                                                <option value="COMPETING">Competing in</option>
+                                            </select>
+                                            <p class="setting-hint">Activity type shown in the status</p>
+                                        </div>
+
+                                        <div class="setting-group">
+                                            <label class="setting-label">Online Status</label>
+                                            <select id="customStatusState" class="modern-select">
+                                                <option value="online">Online</option>
+                                                <option value="idle">Idle</option>
+                                                <option value="dnd">Do Not Disturb</option>
+                                                <option value="invisible">Invisible</option>
+                                            </select>
+                                            <p class="setting-hint">Bot's online presence indicator</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="settings-card" data-card="messages">
+                                    <div class="card-header">
+                                        <div class="card-icon-wrapper purple-gradient">
+                                            <i class="mdi mdi-message-text text-2xl"></i>
+                                        </div>
+                                        <h2 class="card-title">Bot Messages</h2>
+                                    </div>
+                                    <div class="setting-fields">
+                                        <div class="setting-group">
+                                            <label class="setting-label">DM Response</label>
+                                            <textarea id="dmResponseText" class="modern-input min-h-[100px]"
+                                                placeholder="Message to send when users DM the bot"></textarea>
+                                            <p class="setting-hint">Leave empty to disable auto-responses in DMs</p>
+                                        </div>
+
+                                        <div class="setting-group">
+                                            <label class="setting-label">Emergency Shutdown Code</label>
+                                            <input type="text" id="emergencyShutdownCode" class="modern-input"
+                                                placeholder="Secret code to shut down the bot">
+                                            <p class="setting-hint">Use this to shut down the bot in emergency</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Users Tab - Redesigned for less scrolling -->
+                        <div id="users-tab" class="tab-content hidden">
+                            <div class="users-grid-improved">
+                                <!-- User roles in a single row with tabs -->
+                                <div class="user-roles-container">
+                                    <div class="user-roles-header">
+                                        <button class="user-role-tab active" data-role="owners">
+                                            <i class="mdi mdi-shield-crown"></i>
+                                            <span>Bot Owners</span>
+                                        </button>
+                                        <button class="user-role-tab" data-role="devs">
+                                            <i class="mdi mdi-code-braces"></i>
+                                            <span>Developers</span>
+                                        </button>
+                                        <button class="user-role-tab" data-role="whitelist">
+                                            <i class="mdi mdi-shield-check"></i>
+                                            <span>Whitelist</span>
+                                        </button>
+                                        <button class="user-role-tab" data-role="blacklist">
+                                            <i class="mdi mdi-shield-alert"></i>
+                                            <span>Blacklist</span>
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- Role descriptions -->
+                                    <div class="user-role-descriptions">
+                                        <div class="role-description active" id="owners-description">
+                                            <h3>Bot Owners</h3>
+                                            <p>Complete bot access and all permissions. These users have full control over the bot and all its systems.</p>
+                                        </div>
+                                        <div class="role-description" id="devs-description">
+                                            <h3>Developers</h3>
+                                            <p>Access to developer commands and tools. These users can use development features and modify bot behavior.</p>
+                                        </div>
+                                        <div class="role-description" id="whitelist-description">
+                                            <h3>Whitelist</h3>
+                                            <p>Elevated permissions and reduced cooldowns. Whitelisted users have fewer restrictions on command usage.</p>
+                                        </div>
+                                        <div class="role-description" id="blacklist-description">
+                                            <h3>Blacklist</h3>
+                                            <p>Blocked from using the bot. Blacklisted users cannot use any commands or interact with the bot.</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- User chips container -->
+                                    <div class="user-management-container">
+                                        <div class="user-list-panel active" id="owners-panel">
+                                            <div class="user-list-header">
+                                                <h3>Bot Owners</h3>
+                                                <button id="addOwnerBtn" class="add-user-button">
+                                                    <i class="mdi mdi-plus"></i>
+                                                    <span>Add Owner</span>
+                                                </button>
+                                            </div>
+                                            <div class="user-chips" id="ownerChips"></div>
+                                        </div>
+                                        
+                                        <div class="user-list-panel" id="devs-panel">
+                                            <div class="user-list-header">
+                                                <h3>Developers</h3>
+                                                <button id="addDevBtn" class="add-user-button">
+                                                    <i class="mdi mdi-plus"></i>
+                                                    <span>Add Developer</span>
+                                                </button>
+                                            </div>
+                                            <div class="user-chips" id="devChips"></div>
+                                        </div>
+                                        
+                                        <div class="user-list-panel" id="whitelist-panel">
+                                            <div class="user-list-header">
+                                                <h3>Whitelisted Users</h3>
+                                                <button id="addWhitelistBtn" class="add-user-button">
+                                                    <i class="mdi mdi-plus"></i>
+                                                    <span>Add to Whitelist</span>
+                                                </button>
+                                            </div>
+                                            <div class="user-chips" id="whitelistChips"></div>
+                                        </div>
+                                        
+                                        <div class="user-list-panel" id="blacklist-panel">
+                                            <div class="user-list-header">
+                                                <h3>Blacklisted Users</h3>
+                                                <button id="addBlacklistBtn" class="add-user-button">
+                                                    <i class="mdi mdi-plus"></i>
+                                                    <span>Add to Blacklist</span>
+                                                </button>
+                                            </div>
+                                            <div class="user-chips" id="blacklistChips"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="security-tab" class="tab-content hidden">
+                            <div class="settings-grid">
+                                <div class="settings-card security-card" data-card="security">
+                                    <div class="card-header">
+                                        <div class="card-icon-wrapper yellow-gradient">
+                                            <i class="mdi mdi-shield-lock text-2xl"></i>
+                                        </div>
+                                        <h2 class="card-title">Security</h2>
+                                    </div>
+                                    <div class="security-container">
+                                        <div class="toggle-item" data-feature="twoFactorAuth">
+                                            <div>
+                                                <h3 class="toggle-title">Two-Factor Authentication</h3>
+                                                <p class="toggle-description">Require 2FA verification for sensitive
+                                                    operations</p>
+                                                <div id="twoFactorAuthInput" class="auth-input-container"
+                                                    style="display: none; margin-top: 1rem;">
+                                                    <input type="text" id="twoFactorCode" class="modern-input"
+                                                        placeholder="Enter 6-digit code" maxlength="6" pattern="\d{6}"
+                                                        oninput="validateTwoFactorCode(this)"
+                                                        title="Please enter a 6-digit code">
+                                                    <p class="setting-hint mt-2">This code will be required when starting
+                                                        the bot</p>
+                                                    <p id="twoFactorError" class="error-message hidden"></p>
+                                                </div>
+                                            </div>
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" id="twoFactorAuthEnabled">
+                                                <span class="slider">
+                                                    <span class="slider-circle"></span>
+                                                </span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Database Tab -->
+                        <div id="database-tab" class="tab-content hidden">
+                            <div class="settings-grid">
+                                <div class="settings-card" data-card="backups">
+                                    <div class="card-header">
+                                        <div class="card-icon-wrapper cyan-gradient">
+                                            <i class="mdi mdi-database-export text-2xl"></i>
+                                        </div>
+                                        <h2 class="card-title">Database Backups</h2>
+                                    </div>
+                                    <div class="setting-fields">
+                                        <div class="setting-group">
+                                            <label class="setting-label">Backup Interval</label>
+                                            <div class="input-group">
+                                                <input type="number" id="databaseBackupInterval" class="modern-input"
+                                                    min="1" max="168" value="24">
+                                                <span class="input-suffix">hours</span>
+                                            </div>
+                                            <p class="setting-hint">How often to automatically back up the database</p>
+                                        </div>
+
+                                        <div class="setting-group">
+                                            <label class="setting-label">Backup Retention</label>
+                                            <div class="input-group">
+                                                <input type="number" id="backupRetention" class="modern-input" min="1"
+                                                    max="90" value="7">
+                                                <span class="input-suffix">days</span>
+                                            </div>
+                                            <p class="setting-hint">How long to keep backups before automatic deletion</p>
+                                        </div>
+
+                                        <div class="flex justify-center mt-4">
+                                            <button id="backupNowBtn" class="action-button backup-button">
+                                                <i class="mdi mdi-database-export"></i>
+                                                <span>Backup Now</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="save-container">
+                <button id="saveSettings" class="neo-save-button">
+                    <span class="save-button-inner">
+                        <i class="mdi mdi-content-save"></i>
+                        <span>Save Changes</span>
+                    </span>
+                </button>
+            </div>
+        </main>
+
+        <!-- User Modal -->
+        <div id="userModal" class="modal-container">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="modalTitle">Add New User</h3>
+                    <button id="closeModal" class="modal-close-btn">
+                        <i class="mdi mdi-close"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-4">
+                        <label for="userIdInput" class="setting-label mb-2">Discord User ID</label>
+                        <input type="text" id="userIdInput" class="modern-input" placeholder="Enter 18-digit Discord ID"
+                            pattern="\d{17,19}" title="Please enter a valid Discord User ID">
+                        <p class="setting-hint mt-2">Where to find: Enable Developer Mode in Discord, right-click a user and
+                            select "Copy ID"</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="cancelModalBtn" class="cancel-button">Cancel</button>
+                    <button id="confirmModalBtn" class="primary-button">Add User</button>
+                </div>
+            </div>
+        </div>
+
+        <script src="/js/settings.js"></script>
+    </div>
+
+    <script>
+        let ws,reconnectAttempts=0,maxReconnectAttempts=5;
+        function connectWebSocket(){
+            ws=new WebSocket(`ws://${window.location.host}/ws`);
+            ws.onopen=()=>{
+                reconnectAttempts=0;
+                const status=document.createElement('div');
+                status.id='ws-status';
+                status.className='fixed bottom-4 right-4 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-sm';
+                status.textContent='Connected';
+                document.body.appendChild(status);
+                setTimeout(()=>status.remove(),2000);
+            };
+            ws.onmessage=({data})=>{
+                try{
+                    const {type,data:stats}=JSON.parse(data);
+                    if(type==='stats'){
+                        const {memoryUsage,uptime,ping}=stats;
+                        document.querySelector('.stat-item:first-child .text-violet-400').textContent=memoryUsage;
+                        document.querySelector('.stat-item:last-child .text-emerald-400').textContent=uptime;
+                        const pingEl=document.getElementById('ping-value');
+                        pingEl.textContent=`${ping}ms`;
+                        pingEl.className=`font-semibold ${ping<100?'text-emerald-400':ping<300?'text-yellow-400':'text-red-400'}`;
+                    }
+                }catch(e){}
+            };
+            ws.onclose=()=>{
+                if(reconnectAttempts<maxReconnectAttempts){
+                    reconnectAttempts++;
+                    setTimeout(connectWebSocket,1000);
+                }
+            };
+        }
+        connectWebSocket();
+        document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>document.body.style.transition='opacity .3s',100));
+    </script>
+</body>
+</html>
