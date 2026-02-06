@@ -1,0 +1,481 @@
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(-100%);
+    }
+
+    to {
+        transform: translateX(0);
+    }
+}
+
+@keyframes float {
+    0% {
+        transform: translateY(0px);
+    }
+
+    50% {
+        transform: translateY(-8px);
+    }
+
+    100% {
+        transform: translateY(0px);
+    }
+}
+
+@keyframes glow {
+    0% {
+        box-shadow: 0 0 5px rgba(139, 92, 246, 0.3);
+    }
+
+    50% {
+        box-shadow: 0 0 20px rgba(139, 92, 246, 0.5);
+    }
+
+    100% {
+        box-shadow: 0 0 5px rgba(139, 92, 246, 0.3);
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -468px 0;
+    }
+
+    100% {
+        background-position: 468px 0;
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+}
+
+.animate-pulse {
+    animation: pulse 2s infinite;
+}
+
+.animate-slide-in {
+    animation: slideIn 0.5s ease-out forwards;
+}
+
+.animate-float {
+    animation: float 6s ease-in-out infinite;
+}
+
+.animate-glow {
+    animation: glow 3s ease-in-out infinite;
+}
+
+.glass-morphism {
+    background: rgba(13, 13, 18, 0.85);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(74, 75, 89, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.guild-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+    padding: 0.5rem;
+    width: 100%;
+}
+
+.guild-card {
+    background: linear-gradient(145deg, #1a1a24 0%, #13131a 100%);
+    border-radius: 1.5rem;
+    overflow: hidden;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateY(0) scale(1);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(44, 44, 53, 0.6);
+    will-change: transform, box-shadow;
+}
+
+.guild-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    border-color: rgba(139, 92, 246, 0.4);
+    box-shadow:
+        0 20px 40px rgba(0, 0, 0, 0.3),
+        0 0 20px rgba(139, 92, 246, 0.2);
+}
+
+.card-header {
+    position: relative;
+    padding-top: 50%;
+    background: linear-gradient(135deg, #242433, #1c1c25);
+    overflow: hidden;
+}
+
+.card-header img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scale(1);
+    filter: brightness(0.95) saturate(1.1);
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.guild-card:hover .card-header img {
+    transform: scale(1.1);
+    filter: brightness(1.1) saturate(1.2);
+}
+
+.card-header .overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top,
+            rgba(19, 19, 26, 1) 0%,
+            rgba(19, 19, 26, 0.8) 40%,
+            rgba(19, 19, 26, 0.4) 70%,
+            rgba(19, 19, 26, 0.2) 100%);
+}
+
+.leave-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    z-index: 20;
+    padding: 0.6rem;
+    border-radius: 0.75rem;
+    background: rgba(239, 68, 68, 0.15);
+    color: rgb(248, 113, 113);
+    transition: all 0.3s;
+    opacity: 0;
+    transform: translateY(-10px);
+}
+
+.guild-card:hover .leave-btn {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.leave-btn:hover {
+    background: rgba(239, 68, 68, 0.4);
+    transform: scale(1.1) translateY(0) !important;
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+}
+
+.card-header .header-content {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 1.75rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    z-index: 10;
+}
+
+.card-content {
+    padding: 1.75rem;
+    position: relative;
+    z-index: 5;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+    margin-top: 1.25rem;
+}
+
+.stat-item:hover {
+    background: rgba(28, 28, 37, 0.9);
+    border-color: rgba(139, 92, 246, 0.3);
+    transform: translateY(-4px);
+}
+
+.main-content {
+    margin-left: 320px;
+    padding: 1.5rem 2rem;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0c0c13 0%, #0a0a0f 100%);
+    width: calc(100% - 320px);
+    position: relative;
+}
+
+.search-bar {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    background: rgba(13, 13, 18, 0.95);
+    padding: 1.5rem;
+    margin: 0 auto 2rem auto;
+    border-bottom: 1px solid rgba(74, 75, 89, 0.3);
+    display: flex;
+    gap: 1.25rem;
+    backdrop-filter: blur(16px);
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.25);
+    max-width: 100%;
+    border-radius: 1.25rem;
+}
+
+.stats-overview {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    width: 100%;
+}
+
+.additional-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    width: 100%;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, #191924 0%, #13131a 100%);
+    padding: 1.75rem;
+    border-radius: 1.25rem;
+    border: 1px solid rgba(44, 44, 53, 0.6);
+    transition: all 0.3s ease;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(139, 92, 246, 0.3);
+    box-shadow: 0 15px 30px rgba(139, 92, 246, 0.1);
+}
+
+.stat-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100px;
+    height: 100px;
+    background: linear-gradient(135deg, transparent 0%, rgba(139, 92, 246, 0.1) 100%);
+    border-radius: 0 0 0 70%;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.stat-card:hover::after {
+    opacity: 1;
+}
+
+.stat-box {
+    background: rgba(28, 28, 37, 0.7);
+    padding: 1.25rem;
+    border-radius: 1.25rem;
+    border: 1px solid rgba(44, 44, 53, 0.6);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(8px);
+}
+
+.stat-box:hover {
+    border-color: rgba(139, 92, 246, 0.4);
+    transform: translateY(-4px);
+    box-shadow:
+        0 8px 20px rgba(0, 0, 0, 0.2),
+        0 0 15px rgba(139, 92, 246, 0.15);
+    background: rgba(28, 28, 37, 0.9);
+}
+
+.stat-box::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg,
+            transparent 0%,
+            rgba(139, 92, 246, 0.1) 50%,
+            transparent 100%);
+    transform: rotate(45deg);
+    transition: transform 0.6s;
+    opacity: 0;
+}
+
+.stat-box:hover::after {
+    opacity: 1;
+    transform: rotate(45deg) translate(50%, 50%);
+}
+
+.stat-icon {
+    border-radius: 1rem;
+    transition: all 0.3s;
+}
+
+.stat-card:hover .stat-icon,
+.guild-card:hover .stat-icon {
+    transform: scale(1.1);
+}
+
+.nav-item {
+    border-radius: 1rem;
+    transition: all 0.3s;
+}
+
+input[type="text"] {
+    transition: all 0.3s;
+}
+
+input[type="text"]:focus {
+    border-color: rgba(139, 92, 246, 0.5);
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+}
+
+button {
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+button:hover {
+    transform: translateY(-2px);
+}
+
+.status-badge {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s;
+}
+
+.status-badge.active {
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.status-badge.inactive {
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.premium-badge {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(168, 85, 247, 0.2) 100%);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    transition: all 0.3s;
+}
+
+.premium-badge:hover {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.3) 0%, rgba(168, 85, 247, 0.3) 100%);
+    transform: translateY(-2px);
+}
+
+.partnered-badge {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.2) 100%);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.partnered-badge:hover {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(37, 99, 235, 0.3) 100%);
+    transform: translateY(-2px);
+}
+
+.verified-badge {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.2) 100%);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.verified-badge:hover {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.3) 0%, rgba(5, 150, 105, 0.3) 100%);
+    transform: translateY(-2px);
+}
+
+@keyframes cardEntrance {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.animate-fade-in {
+    animation: cardEntrance 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    opacity: 0;
+}
+
+@media (min-width: 1600px) {
+    .guild-grid {
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    }
+}
+
+@media (min-width: 1920px) {
+    .guild-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    }
+}
+
+@media (max-width: 1280px) {
+    .guild-grid {
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    }
+
+    .additional-stats {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+}
+
+@media (max-width: 1024px) {
+    .main-content {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    .search-bar {
+        margin: 0 0 1.5rem 0;
+        width: 100%;
+        padding: 1.25rem;
+    }
+
+    .search-bar input {
+        font-size: 0.9rem;
+        padding-top: 0.75rem;
+        padding-bottom: 0.75rem;
+    }
+
+    .search-bar button {
+        padding: 0.75rem !important;
+    }
+
+    .search-bar button span {
+        display: none;
+    }
+}
