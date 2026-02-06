@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en" class="modern-scrollbar">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#111827" />
+  <title>Synapse Dashboard - Logs</title>
+  <style>
+    body {
+      opacity: 0;
+      background: #0a0a0f;
+      color: #f3f4f6
+    }
+
+    .modern-sidebar {
+      width: 280px;
+      position: fixed;
+      height: 100vh;
+      background: #111827
+    }
+
+    .modern-scrollbar {
+      scrollbar-width: thin;
+      scrollbar-color: #374151 transparent
+    }
+
+    .log-entry {
+      background: rgba(31, 41, 55, .5);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(75, 85, 99, .2)
+    }
+
+    .glass-morphism {
+      transition: all .2s ease-in-out
+    }
+
+    .glass-morphism:hover {
+      transform: translateY(-1px);
+      border-color: rgba(59, 130, 246, .3)
+    }
+  </style>
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.2.96/css/materialdesignicons.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="/css/dashboard.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="/css/logs.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <script defer src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <noscript>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.2.96/css/materialdesignicons.min.css">
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <link rel="stylesheet" href="/css/logs.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+  </noscript>
+</head>
+
+<body class="bg-[#0a0a0f] text-gray-100" onload="document.body.style.opacity='1'">
+  <div class="flex min-h-screen">
+    <aside class="modern-sidebar modern-scrollbar">
+      <div class="sidebar-content">
+        <div class="sidebar-section">
+          <div class="flex items-center space-x-4">
+            <div class="relative">
+              <img src="<%= client.user.displayAvatarURL() %>" alt="Bot Avatar" class="w-12 h-12 rounded-xl object-cover ring-2 ring-violet-500/20">
+            </div>
+            <div>
+              <h2 class="font-semibold text-lg">
+                <%= client.user.username %>
+              </h2>
+              <div class="bot-status">
+                <span class="status-dot"></span>
+                <span class="text-sm text-emerald-400">Online</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-8 space-y-4">
+            <div class="stats-pair">
+              <div class="stat-item">
+                <div class="stat-icon">
+                  <i class="mdi mdi-memory text-xl"></i>
+                </div>
+                <div class="stat-item-content">
+                  <p>Memory Usage</p>
+                  <p class="text-violet-400">
+                    <%= stats.memoryUsage %>
+                  </p>
+                </div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-icon">
+                  <i class="mdi mdi-clock-outline text-xl"></i>
+                </div>
+                <div class="stat-item-content">
+                  <p>Uptime</p>
+                  <p class="text-emerald-400">
+                    <%= stats.uptime %>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <nav class="nav-section">
+          <h3 class="nav-header">BOT</h3>
+          <div class="space-y-2">
+            <a href="/" class="nav-item <%= path === '/' ? 'active' : '' %>">
+              <i class="mdi mdi-view-dashboard"></i>
+              <span>Dashboard</span>
+            </a>
+            <a href="/guilds" class="nav-item <%= path === '/guilds' ? 'active' : '' %>">
+              <i class="mdi mdi-server"></i>
+              <span>Servers</span>
+            </a>
+            <a href="/commands" class="nav-item <%= path === '/commands' ? 'active' : '' %>">
+              <i class="mdi mdi-lightning-bolt"></i>
+              <span>Commands</span>
+            </a>
+          </div>
+
+          <h3 class="nav-header mt-8">CORE</h3>
+          <div class="space-y-2">
+            <a href="/console" class="nav-item <%= path === '/console' ? 'active' : '' %>">
+              <i class="mdi mdi-console"></i>
+              <span>Console</span>
+            </a>
+            <a href="/settings" class="nav-item <%= path === '/settings' ? 'active' : '' %>">
+              <i class="mdi mdi-cog"></i>
+              <span>Settings</span>
+            </a>
+            <a href="/logs" class="nav-item <%= path === '/logs' ? 'active' : '' %>">
+              <i class="mdi mdi-text-box-outline"></i>
+              <span>Logs</span>
+            </a>
+          </div>
+        </nav>
+      </div>
+
+      <div class="sidebar-bottom">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <p class="text-sm text-gray-400">Latency</p>
+            <p class="text-emerald-400 font-semibold" id="ping-value">
+              <%= client.ws.ping %>ms
+            </p>
+          </div>
+          <div class="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-sm">
+            Connected
+          </div>
+        </div>
+        <button onclick="confirmShutdown()" class="shutdown-button">
+          <i class="mdi mdi-power text-lg"></i>
+          <span>Shutdown</span>
+        </button>
+      </div>
+    </aside>
+    <main class="flex-1 modern-scrollbar ml-[280px] flex flex-col h-screen">
+      <nav class="h-16 border-b border-[#1c1c25] sticky top-0 bg-[#13131a]/80 backdrop-blur-md z-10">
+        <div class="flex items-center justify-between h-full px-6">
+          <button class="lg:hidden modern-button" onclick="toggleSidebar()">
+            <i class="mdi mdi-menu"></i>
+          </button>
+
+          <div class="flex items-center space-x-4">
+            <div class="flex items-center gap-2">
+              <span id="log-count-badge" class="px-2 py-1 rounded-full bg-blue-500/10 text-blue-400 text-xs font-medium">
+                <%= logs.length %> Logs
+              </span>
+              <span class="text-gray-400 text-sm">•</span>
+              <span id="last-update" class="text-xs text-gray-400">Updated just now</span>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <div class="flex flex-col lg:flex-row h-[calc(100vh-4rem)] overflow-hidden">
+        <div class="w-full lg:w-1/4 bg-[#11111a] border-r border-[#1c1c25] p-4 flex flex-col overflow-hidden">
+          <div class="mb-4">
+            <div class="relative">
+              <div class="search-wrapper relative">
+                <input type="text" id="searchLogs" placeholder="Search logs..." class="search-input w-full px-4 py-2.5 pl-10 rounded-xl" />
+                <i class="mdi mdi-magnify absolute left-3 top-3 text-gray-400"></i>
+                <button id="advancedSearchBtn" class="absolute right-3 top-2.5 text-gray-400 hover:text-blue-400">
+                  <i class="mdi mdi-tune"></i>
+                </button>
+              </div>
+              <div id="advancedSearch" class="hidden absolute mt-2 p-4 bg-[#1a1b23] rounded-xl border border-gray-800 shadow-xl z-20 w-full">
+                <div class="space-y-3">
+                  <div>
+                    <label class="text-sm text-gray-400">Date Range</label>
+                    <div class="flex gap-2 mt-1">
+                      <input type="datetime-local" class="search-input px-3 py-1.5 text-sm w-full" id="dateFrom">
+                      <input type="datetime-local" class="search-input px-3 py-1.5 text-sm w-full" id="dateTo">
+                    </div>
+                  </div>
+                  <div>
+                    <label class="text-sm text-gray-400">Categories</label>
+                    <div class="flex flex-wrap gap-2 mt-1" id="categoryCheckboxes">
+                      <!-- Will be populated by JavaScript -->
+                    </div>
+                  </div>
+                  <div class="flex justify-end mt-3">
+                    <button id="applyFilters" class="modern-button bg-blue-500/20 text-blue-400 hover:bg-blue-500/30">
+                      <i class="mdi mdi-filter-variant mr-2"></i>
+                      Apply Filters
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex gap-2 mt-4">
+              <button onclick="exportLogs()" class="action-button group px-3 py-2 bg-blue-500/20 hover:bg-blue-500/30 rounded-xl text-blue-400 transition-all flex items-center justify-center flex-1">
+                <i class="mdi mdi-download mr-2 group-hover:animate-bounce"></i>
+                <span>Export</span>
+              </button>
+              <button onclick="clearAllLogs()" class="action-button group px-3 py-2 bg-red-500/20 hover:bg-red-500/30 rounded-xl text-red-400 transition-all flex items-center justify-center flex-1">
+                <i class="mdi mdi-delete group-hover:rotate-12 transition-transform"></i>
+                <span>Clear</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="overflow-y-auto modern-scrollbar flex-1">
+            <div class="font-medium text-sm text-gray-400 mb-2 uppercase tracking-wider">Filter by Category</div>
+            <div class="space-y-1">
+              <button onclick="filterLogs('all')" class="category-filter-btn active w-full text-left px-3 py-2 rounded-lg">
+                <div class="flex items-center">
+                  <i class="mdi mdi-view-list mr-2 text-blue-400"></i>
+                  <span>All Logs</span>
+                  <span class="ml-auto px-2 py-0.5 text-xs rounded-full bg-white/10" id="all-count"><%= logs.length %></span>
+                </div>
+              </button>
+
+              <% const categories=[ { name: 'system', icon: 'mdi-cog', color: 'text-green-400' }, 
+                 { name: 'command', icon: 'mdi-console', color: 'text-blue-400' }, 
+                 { name: 'error', icon: 'mdi-alert', color: 'text-red-400' }, 
+                 { name: 'info', icon: 'mdi-information', color: 'text-purple-400' }, 
+                 { name: 'warning', icon: 'mdi-alert-circle', color: 'text-yellow-400' }, 
+                 { name: 'success', icon: 'mdi-check-circle', color: 'text-emerald-400' }, 
+                 { name: 'startup', icon: 'mdi-power', color: 'text-cyan-400' }, 
+                 { name: 'event', icon: 'mdi-lightning-bolt', color: 'text-violet-400' }, 
+                 { name: 'prefix', icon: 'mdi-pound', color: 'text-yellow-400' }, 
+                 { name: 'component', icon: 'mdi-puzzle', color: 'text-pink-400' }, 
+                 { name: 'database', icon: 'mdi-database', color: 'text-cyan-400' }, 
+                 { name: 'api', icon: 'mdi-api', color: 'text-indigo-400' }, 
+                 { name: 'cache', icon: 'mdi-cached', color: 'text-blue-400' }, 
+                 { name: 'interaction', icon: 'mdi-gesture-tap', color: 'text-green-400' } ]; %>
+
+              <% categories.forEach(category=> { %>
+              <button onclick="filterLogs('<%= category.name %>')" class="category-filter-btn w-full text-left px-3 py-2 rounded-lg" data-category="<%= category.name %>">
+                <div class="flex items-center">
+                  <i class="mdi <%= category.icon %> mr-2 <%= category.color %>"></i>
+                  <span><%= category.name.charAt(0).toUpperCase() + category.name.slice(1) %></span>
+                  <span class="ml-auto px-2 py-0.5 text-xs rounded-full bg-white/10" id="<%= category.name %>-count">0</span>
+                </div>
+              </button>
+              <% }); %>
+            </div>
+          </div>
+        </div>
+
+        <div class="w-full lg:w-3/4 overflow-hidden flex flex-col">
+          <div class="p-4 bg-[#13131a] border-b border-[#1c1c25]">
+            <div class="flex items-center">
+              <div class="p-3 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-2xl mr-4">
+                <i class="mdi mdi-text-box-multiple text-xl text-blue-400"></i>
+              </div>
+              <div>
+                <h2 class="text-lg font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+                  Log Management</h2>
+                <p class="text-xs text-gray-400" id="category-display">Viewing all logs</p>
+              </div>
+              <div class="ml-auto flex items-center gap-2">
+                <button id="scrollToTop" class="p-2 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20">
+                  <i class="mdi mdi-arrow-up"></i>
+                </button>
+                <button id="autoScrollToggle" class="p-2 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20">
+                  <i class="mdi mdi-arrow-down-bold-box"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="logs-container-parent">
+            <div id="logs-container" class="flex-1 overflow-y-auto modern-scrollbar p-2 h-full">
+              <div class="space-y-1.5" id="logs-items">
+                <% logs.forEach(log=> { %>
+                <div class="log-entry glass-morphism rounded-lg p-3 hover:border-blue-500/30 transition-all flex flex-col" data-category="<%= log.category.toLowerCase() %>" data-id="<%= log.id %>" data-timestamp="<%= log.timestamp %>" onclick="showLogDetails('<%= log.id %>')">
+                  <div class="flex justify-between items-start">
+                    <div class="flex items-center space-x-3">
+                      <span class="log-category px-2 py-0.5 text-xs rounded-full font-medium <%= getCategoryClass(log.category) %>">
+                        <%= log.category %>
+                      </span>
+                      <span class="log-timestamp text-xs text-gray-400">
+                        <%= new Date(log.timestamp).toLocaleString() %>
+                      </span>
+                    </div>
+                    <button onclick="deleteLog(event, this)" class="text-gray-400 hover:text-red-400 transition-colors h-5 w-5 flex items-center justify-center">
+                      <i class="mdi mdi-close text-lg"></i>
+                    </button>
+                  </div>
+                  <p class="log-message mt-1 text-gray-200 text-sm line-clamp-1">
+                    <%= log.message %>
+                  </p>
+                </div>
+                <% }); %>
+              </div>
+            </div>
+
+            <div id="empty-logs" class="hidden">
+              <div class="p-4 mb-4 rounded-full bg-blue-500/10">
+                <i class="mdi mdi-text-box-outline text-4xl text-blue-400"></i>
+              </div>
+              <h3 class="text-lg font-medium text-gray-300 mb-2">No logs found</h3>
+              <p class="text-sm text-gray-400 text-center max-w-md">
+                There are no logs matching your current filter criteria. Try changing your filters or clearing the search.
+              </p>
+            </div>
+
+            <div id="loading-spinner" class="hidden absolute inset-0 bg-black/30 backdrop-blur-sm flex justify-center items-center">
+              <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <template id="log-entry-template">
+    <div class="log-entry glass-morphism rounded-lg p-3 hover:border-blue-500/30 transition-all flex flex-col">
+      <div class="flex justify-between items-start">
+        <div class="flex items-center space-x-3">
+          <span class="log-category px-2 py-0.5 text-xs rounded-full font-medium"></span>
+          <span class="log-timestamp text-xs text-gray-400"></span>
+        </div>
+        <button onclick="deleteLog(event, this)" class="text-gray-400 hover:text-red-400 transition-colors h-5 w-5 flex items-center justify-center">
+          <i class="mdi mdi-close text-lg"></i>
+        </button>
+      </div>
+      <p class="log-message mt-1 text-gray-200 text-sm line-clamp-1"></p>
+    </div>
+  </template>
+
+  <div id="logDetailsModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div class="bg-[#1a1b23] rounded-xl border border-gray-800 w-full max-w-2xl mx-4 shadow-2xl transform transition-all">
+      <div class="p-6">
+        <div class="flex justify-between items-start mb-4">
+          <div class="flex items-center space-x-3">
+            <span id="modalCategory" class="log-category px-2 py-0.5 text-xs rounded-full font-medium"></span>
+            <span id="modalTimestamp" class="text-sm text-gray-400"></span>
+          </div>
+          <button onclick="closeLogDetails()" class="text-gray-400 hover:text-gray-200">
+            <i class="mdi mdi-close text-xl"></i>
+          </button>
+        </div>
+        <div class="space-y-4">
+          <div class="bg-black/20 rounded-lg p-4 max-h-[60vh] overflow-y-auto modern-scrollbar">
+            <pre id="modalMessage" class="text-gray-200 whitespace-pre-wrap break-words font-mono text-sm"></pre>
+          </div>
+          <div class="flex justify-end space-x-3">
+            <button onclick="copyLogDetails()" class="modern-button">
+              <i class="mdi mdi-content-copy mr-2"></i>
+              Copy
+            </button>
+            <button onclick="deleteLogFromModal()" class="modern-button bg-red-500/20 text-red-400 hover:bg-red-500/30">
+              <i class="mdi mdi-delete mr-2"></i>
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    window.LOGS = <%- JSON.stringify(logs) %>;
+    window.getCategoryClass = function(category) {
+      const classes = {
+        system: 'bg-green-500/20 text-green-400',
+        error: 'bg-red-500/20 text-red-400',
+        command: 'bg-blue-500/20 text-blue-400',
+        info: 'bg-purple-500/20 text-purple-400',
+        warning: 'bg-yellow-500/20 text-yellow-400',
+        success: 'bg-emerald-500/20 text-emerald-400',
+        startup: 'bg-cyan-500/20 text-cyan-400',
+        event: 'bg-violet-500/20 text-violet-400',
+        prefix: 'bg-yellow-500/20 text-yellow-400',
+        component: 'bg-pink-500/20 text-pink-400',
+        database: 'bg-cyan-500/20 text-cyan-400',
+        api: 'bg-indigo-500/20 text-indigo-400',
+        cache: 'bg-blue-500/20 text-blue-400',
+        interaction: 'bg-green-500/20 text-green-400'
+      };
+      return classes[category.toLowerCase()] || 'bg-gray-500/20 text-gray-400';
+    }
+  </script>
+  <script src="/js/logs.js"></script>
+  <script>document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>document.body.style.transition='opacity .3s',100));</script>
+</body>
+</html>
