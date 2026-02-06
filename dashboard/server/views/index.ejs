@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en" class="modern-scrollbar">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#111827" />
+    <title>Synapse Dashboard - Command Manager</title>
+    <style>
+        body {
+            opacity: 0;
+            background: #0a0a0f;
+            color: #f3f4f6
+        }
+
+        .modern-sidebar {
+            width: 280px;
+            position: fixed;
+            height: 100vh;
+            background: #111827
+        }
+
+        .modern-scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: #374151 transparent
+        }
+
+        .stat-card {
+            transition: all .3s ease;
+            background: rgba(31, 41, 55, .5);
+            backdrop-filter: blur(8px)
+        }
+
+        .command-card {
+            transition: all .3s ease;
+            border: 1px solid rgba(255, 255, 255, .05)
+        }
+
+        .prefix-command-card {
+            background: rgba(15, 15, 20, .4);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, .05)
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0)
+            }
+
+            50% {
+                transform: translateY(-8px)
+            }
+
+            100% {
+                transform: translateY(0)
+            }
+        }
+
+        @keyframes pulse-glow {
+            0% {
+                box-shadow: 0 0 0 0 rgba(124, 58, 237, .2)
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(124, 58, 237, 0)
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(124, 58, 237, 0)
+            }
+        }
+
+        .float-animation {
+            animation: float 3s ease-in-out infinite
+        }
+
+        .pulse-glow {
+            animation: pulse-glow 2s infinite
+        }
+    </style>
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.2.96/css/materialdesignicons.min.css" as="style"
+        onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="/css/dashboard.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <script defer src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script defer src="https://unpkg.com/@popperjs/core@2"></script>
+    <script defer src="https://unpkg.com/tippy.js@6"></script>
+    <noscript>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.2.96/css/materialdesignicons.min.css">
+        <link rel="stylesheet" href="/css/dashboard.css">
+    </noscript>
+</head>
+
+<body class="bg-[#0a0a0f] text-gray-100" onload="document.body.style.opacity='1'">
+    <div class="flex min-h-screen">
+        <aside class="modern-sidebar modern-scrollbar">
+            <div class="sidebar-content">
+                <div class="sidebar-section">
+                    <div class="flex items-center space-x-4">
+                        <div class="relative">
+                            <img src="<%= client.user.displayAvatarURL() %>" alt="Bot Avatar"
+                                class="w-12 h-12 rounded-xl object-cover ring-2 ring-violet-500/20">
+                        </div>
+                        <div>
+                            <h2 class="font-semibold text-lg">
+                                <%= client.user.username %>
+                            </h2>
+                            <div class="bot-status">
+                                <span class="status-dot"></span>
+                                <span class="text-sm text-emerald-400">Online</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 space-y-4">
+                        <div class="stats-pair">
+                            <div class="stat-item">
+                                <div class="stat-icon">
+                                    <i class="mdi mdi-memory text-xl"></i>
+                                </div>
+                                <div class="stat-item-content">
+                                    <p>Memory Usage</p>
+                                    <p class="text-violet-400">
+                                        <%= stats.memoryUsage %>
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-icon">
+                                    <i class="mdi mdi-clock-outline text-xl"></i>
+                                </div>
+                                <div class="stat-item-content">
+                                    <p>Uptime</p>
+                                    <p class="text-emerald-400">
+                                        <%= stats.uptime %>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <nav class="nav-section">
+                    <h3 class="nav-header">BOT</h3>
+                    <div class="space-y-2">
+                        <a href="/" class="nav-item <%= path === '/' ? 'active' : '' %>">
+                            <i class="mdi mdi-view-dashboard"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="/guilds" class="nav-item <%= path === '/guilds' ? 'active' : '' %>">
+                            <i class="mdi mdi-server"></i>
+                            <span>Servers</span>
+                        </a>
+                        <a href="/commands" class="nav-item <%= path === '/commands' ? 'active' : '' %>">
+                            <i class="mdi mdi-lightning-bolt"></i>
+                            <span>Commands</span>
+                        </a>
+                    </div>
+
+                    <h3 class="nav-header mt-8">CORE</h3>
+                    <div class="space-y-2">
+                        <a href="/console" class="nav-item <%= path === '/settings' ? 'active' : '' %>">
+                            <i class="mdi mdi-console"></i>
+                            <span>Console</span>
+                        </a>
+                        <a href="/settings" class="nav-item <%= path === '/settings' ? 'active' : '' %>">
+                            <i class="mdi mdi-cog"></i>
+                            <span>Settings</span>
+                        </a>
+                        <a href="/logs" class="nav-item <%= path === '/logs' ? 'active' : '' %>">
+                            <i class="mdi mdi-text-box-outline"></i>
+                            <span>Logs</span>
+                        </a>
+                    </div>
+                </nav>
+            </div>
+
+            <div class="sidebar-bottom">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <p class="text-sm text-gray-400">Latency</p>
+                        <p class="text-emerald-400 font-semibold" id="ping-value">
+                            <%= client.ws.ping %>ms
+                        </p>
+                    </div>
+                    <div class="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-sm">
+                        Connected
+                    </div>
+                </div>
+                <button onclick="confirmShutdown()" class="shutdown-button">
+                    <i class="mdi mdi-power text-lg"></i>
+                    <span>Shutdown</span>
+                </button>
+            </div>
+        </aside>
+
+        <main class="flex-1 modern-scrollbar ml-[280px]">
+            <nav
+                class="h-16 border-b border-[#1c1c25] sticky top-0 bg-[#13131a]/80 backdrop-blur-md z-10 flex items-center justify-between px-6">
+                <div class="flex items-center">
+                    <button class="lg:hidden modern-button" onclick="toggleSidebar()">
+                        <i class="mdi mdi-menu"></i>
+                    </button>
+                </div>
+            </nav>
+
+            <!-- Page Content -->
+            <div class="main-content p-6 md:p-8">
+                <!-- Welcome Section -->
+                <div class="mb-8">
+                    <h1 class="text-3xl font-bold mb-2">Welcome to <span
+                            class="bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">Synapse
+                            Dashboard</span></h1>
+                    <p class="text-gray-400 max-w-2xl">Manage your bot, track performance, and configure commands all in
+                        one place. Your bot is running smoothly with all systems operational.</p>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="stats-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+                    <div class="stat-card glass-morphism rounded-xl p-6 overflow-hidden relative">
+                        <div class="absolute -right-4 -bottom-4 opacity-10">
+                            <i class="mdi mdi-server text-7xl text-blue-400"></i>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-lg bg-blue-500/20 float-animation">
+                                <i class="mdi mdi-server text-2xl text-blue-400"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-gray-400 text-sm">Servers</p>
+                                <div class="flex items-baseline">
+                                    <h3 id="guilds-stat" class="text-3xl font-bold text-blue-400 animate-count"
+                                        data-stat="guilds">
+                                        <%= stats.guilds %>
+                                    </h3>
+                                </div>
+                                <p class="text-xs text-blue-400/60 mt-1">Active communities</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card glass-morphism rounded-xl p-6 overflow-hidden relative">
+                        <div class="absolute -right-4 -bottom-4 opacity-10">
+                            <i class="mdi mdi-account-group text-7xl text-emerald-400"></i>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-lg bg-emerald-500/20 float-animation">
+                                <i class="mdi mdi-account-group text-2xl text-emerald-400"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-gray-400 text-sm">Users</p>
+                                <div class="flex items-baseline">
+                                    <h3 id="users-stat" class="text-3xl font-bold text-emerald-400" data-stat="users">
+                                        <%= stats.users %>
+                                    </h3>
+                                </div>
+                                <p class="text-xs text-emerald-400/60 mt-1">Total reach</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card glass-morphism rounded-xl p-6 overflow-hidden relative">
+                        <div class="absolute -right-4 -bottom-4 opacity-10">
+                            <i class="mdi mdi-slash-forward text-7xl text-purple-400"></i>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-lg bg-purple-500/20 float-animation">
+                                <i class="mdi mdi-slash-forward text-2xl text-purple-400"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-gray-400 text-sm">Commands</p>
+                                <div class="flex items-baseline">
+                                    <h3 id="commands-stat" class="text-3xl font-bold text-purple-400"
+                                        data-stat="commands">
+                                        <%= stats.commands %>
+                                    </h3>
+                                    <span class="text-xs text-purple-400/60 ml-2">
+                                        Available
+                                    </span>
+                                </div>
+                                <p class="text-xs text-purple-400/60 mt-1">Slash commands</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card glass-morphism rounded-xl p-6 overflow-hidden relative">
+                        <div class="absolute -right-4 -bottom-4 opacity-10">
+                            <i class="mdi mdi-pencil-outline text-7xl text-yellow-400"></i>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-lg bg-yellow-500/20 float-animation">
+                                <i class="mdi mdi-pencil-outline text-2xl text-yellow-400"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-gray-400 text-sm">Prefix Commands</p>
+                                <div class="flex items-baseline">
+                                    <h3 id="prefixCommands-stat" class="text-3xl font-bold text-yellow-400"
+                                        data-stat="prefixCommands">
+                                        <%= stats.prefixCommands %>
+                                    </h3>
+                                    <span class="text-xs text-yellow-400/60 ml-2">
+                                        Available
+                                    </span>
+                                </div>
+                                <p class="text-xs text-yellow-400/60 mt-1">Classic commands</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <section class="content-section modern-card relative backdrop-blur-sm">
+                    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-lg bg-purple-500/20 float-animation mr-3">
+                                <i class="mdi mdi-lightning-bolt text-3xl text-purple-400"></i>
+                            </div>
+                            <div>
+                                <h2
+                                    class="text-2xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+                                    Command Management
+                                </h2>
+                                <p class="text-sm text-gray-400">Manage and configure your bot commands</p>
+                            </div>
+                        </div>
+                        <div class="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
+                            <div class="relative flex-1 lg:flex-none">
+                                <input type="text" id="searchCommands" placeholder="Search commands..."
+                                    class="search-input w-full lg:w-64 px-4 py-2 pl-10 rounded-lg bg-white/5 border border-white/10 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all">
+                                <i class="mdi mdi-magnify absolute left-3 top-2.5 text-gray-400"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="commands-container" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5 p-4"></div>
+                </section>
+
+                <section class="content-section modern-card relative mt-8 backdrop-blur-sm">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-lg bg-blue-500/20 float-animation mr-3">
+                                <i class="mdi mdi-slash-forward text-3xl text-blue-400"></i>
+                            </div>
+                            <div>
+                                <h2
+                                    class="text-2xl font-bold bg-gradient-to-r from-blue-400 to-violet-400 bg-clip-text text-transparent">
+                                    Prefix Commands
+                                </h2>
+                                <p class="text-sm text-gray-400">Legacy command system configuration</p>
+                            </div>
+                        </div>
+                        <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
+                            <button onclick="openPrefixConfigModal()"
+                                class="w-full sm:w-auto px-4 py-2 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-all flex items-center justify-center space-x-2">
+                                <i class="mdi mdi-cog text-lg"></i>
+                                <span>Settings</span>
+                            </button>
+                            <div class="relative w-full sm:w-auto">
+                                <input type="text" id="searchPrefixCommands" placeholder="Search prefix commands..."
+                                    class="w-full sm:w-64 px-4 py-2 pl-10 rounded-lg bg-white/5 border border-white/10 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none" />
+                                <i class="mdi mdi-magnify absolute left-3 top-2.5 text-gray-400"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="prefix-commands-container"
+                        class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5 p-4"></div>
+                </section>
+
+                <div id="prefix-commands-view"
+                    class="commands-grid grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5 hidden">
+                    <% if (typeof commands !=='undefined' && commands.prefix && commands.prefix.length> 0) { %>
+                        <% commands.prefix.slice(0, 6).forEach(command=> { %>
+                            <div class="prefix-command-card hover:shadow-lg transition-all duration-300">
+                                <div class="flex justify-between items-start mb-3">
+                                    <div>
+                                        <h3 class="text-lg font-semibold text-white flex items-center gap-2">
+                                            <span
+                                                class="px-2 py-0.5 rounded-md bg-blue-500/20 text-blue-400 text-xs font-mono">[
+                                                <%= command.name %>]
+                                            </span>
+                                            <%= command.name %>
+                                        </h3>
+                                        <p class="text-sm text-gray-400 mt-1">
+                                            <%= command.description %>
+                                        </p>
+                                    </div>
+                                    <span
+                                        class="px-2.5 py-1 text-xs rounded-full <%= getCategoryClass(command.category) %>">
+                                        <%= command.category %>
+                                    </span>
+                                </div>
+                                <div class="mt-4 space-y-2 text-sm">
+                                    <div class="flex items-center text-gray-400">
+                                        <i class="mdi mdi-clock-outline mr-2"></i>
+                                        <span>Cooldown: <span class="text-blue-400">
+                                                <%= command.cooldown || 0 %>s
+                                            </span></span>
+                                    </div>
+                                    <% if (command.permission) { %>
+                                        <div class="flex items-center text-gray-400">
+                                            <i class="mdi mdi-shield-check mr-2"></i>
+                                            <span>Permission: <span class="text-blue-400">
+                                                    <%= command.permission %>
+                                                </span></span>
+                                        </div>
+                                        <% } %>
+                                </div>
+                                <div class="flex flex-wrap gap-2 mt-4">
+                                    <% if (command.guildOnly) { %>
+                                        <span class="px-2 py-1 text-xs rounded-full bg-blue-500/10 text-blue-400">
+                                            <i class="mdi mdi-server mr-1"></i>Server Only
+                                        </span>
+                                        <% } %>
+                                            <% if (command.ownerOnly) { %>
+                                                <span
+                                                    class="px-2 py-1 text-xs rounded-full bg-purple-500/10 text-purple-400">
+                                                    <i class="mdi mdi-crown mr-1"></i>Owner Only
+                                                </span>
+                                                <% } %>
+                                </div>
+                                <div class="mt-4 pt-4 border-t border-white/5 flex justify-end">
+                                    <button
+                                        class="px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-all text-sm flex items-center gap-2">
+                                        <i class="mdi mdi-pencil"></i>
+                                        <span>Edit Command</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <% }); %>
+                                <% } else { %>
+                                    <div
+                                        class="col-span-3 text-center py-12 bg-white/5 rounded-xl border border-white/10">
+                                        <div class="flex flex-col items-center">
+                                            <i class="mdi mdi-alert-circle-outline text-5xl text-gray-400 mb-4"></i>
+                                            <p class="text-gray-400 mb-2">No prefix commands available</p>
+                                            <button
+                                                class="px-4 py-2 mt-4 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-all flex items-center gap-2">
+                                                <i class="mdi mdi-plus"></i>
+                                                <span>Create Command</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <% } %>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <template id="command-template">
+        <div class="glass-morphism rounded-lg p-6 command-card hover:border-purple-500/30 transition-all">
+            <div class="flex flex-col w-full">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="flex flex-col">
+                        <h3 class="font-bold text-lg">
+                            <div class="command-name-container flex items-center space-x-2">
+                                <div class="flex items-center">
+                                    <span
+                                        class="text-purple-400 px-2 py-0.5 bg-purple-500/10 rounded-md mr-2 text-sm font-mono">/</span>
+                                    <span class="command-name"></span>
+                                </div>
+                            </div>
+                        </h3>
+                        <p class="text-sm text-gray-400 command-description mt-1"></p>
+                        <div class="flex items-center mt-2 text-xs text-gray-500">
+                            <i class="mdi mdi-file-code-outline mr-1"></i>
+                            <span
+                                class="command-filepath font-mono truncate hover:text-gray-300 transition-colors"></span>
+                        </div>
+                    </div>
+                    <span
+                        class="px-3 py-1 text-xs rounded-full bg-purple-500/20 text-purple-400 font-medium command-category"></span>
+                </div>
+                <div class="space-y-3">
+                    <div class="grid grid-cols-2 gap-3">
+                        <button
+                            class="toggle-btn px-4 py-2 rounded-lg text-sm transition-all flex items-center justify-center space-x-2 devOnly-btn">
+                            <i class="mdi mdi-shield-account text-lg" aria-hidden="true"></i>
+                            <span>Dev Only</span>
+                        </button>
+                        <button
+                            class="toggle-btn px-4 py-2 rounded-lg text-sm transition-all flex items-center justify-center space-x-2 devGuild-btn">
+                            <i class="mdi mdi-shield-home text-lg" aria-hidden="true"></i>
+                            <span>Dev Guild</span>
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button
+                            class="toggle-btn px-4 py-2 rounded-lg text-sm transition-all flex items-center justify-center space-x-2 guildOnly-btn">
+                            <i class="mdi mdi-server text-lg" aria-hidden="true"></i>
+                            <span>Guild Only</span>
+                        </button>
+                        <button
+                            class="cooldown-btn px-4 py-2 rounded-lg text-sm transition-all flex items-center justify-center space-x-2 bg-white/5 hover:bg-white/10">
+                            <i class="mdi mdi-timer text-lg" aria-hidden="true"></i>
+                            <span class="cooldown-text"></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="prefix-command-template">
+        <div class="prefix-command-card">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <h3 class="font-bold text-lg flex items-center space-x-2">
+                        <div class="command-name-container flex items-center">
+                            <span
+                                class="text-blue-400 px-2 py-0.5 bg-blue-500/10 rounded-md mr-2 text-sm font-mono">[!]</span>
+                            <span class="command-name"></span>
+                        </div>
+                    </h3>
+                    <p class="text-sm text-gray-400 command-description mt-1"></p>
+                    <div class="flex items-center mt-2 text-xs text-gray-500">
+                        <i class="mdi mdi-file-code-outline mr-1"></i>
+                        <span class="command-filepath font-mono truncate hover:text-gray-300 transition-colors"></span>
+                    </div>
+                </div>
+                <span
+                    class="px-3 py-1 text-xs rounded-full bg-blue-500/20 text-blue-400 font-medium command-category"></span>
+            </div>
+
+            <div class="space-y-3">
+                <div class="grid grid-cols-2 gap-3">
+                    <button
+                        class="toggle-btn px-4 py-2 rounded-lg text-sm transition-all flex items-center justify-center space-x-2 devOnly-btn">
+                        <i class="mdi mdi-shield-account text-lg"></i>
+                        <span>Dev Only</span>
+                    </button>
+                    <button
+                        class="toggle-btn px-4 py-2 rounded-lg text-sm transition-all flex items-center justify-center space-x-2 devGuild-btn">
+                        <i class="mdi mdi-shield-home text-lg"></i>
+                        <span>Dev Guild</span>
+                    </button>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <button
+                        class="toggle-btn px-4 py-2 rounded-lg text-sm transition-all flex items-center justify-center space-x-2 guildOnly-btn">
+                        <i class="mdi mdi-server text-lg"></i>
+                        <span>Guild Only</span>
+                    </button>
+                    <button
+                        class="cooldown-btn px-4 py-2 rounded-lg text-sm transition-all flex items-center justify-center space-x-2 bg-white/5 hover:bg-white/10">
+                        <i class="mdi mdi-timer text-lg"></i>
+                        <span class="cooldown-text"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <div id="cooldownModal"
+        class="fixed inset-0 modal-backdrop z-50 flex items-center justify-center opacity-0 pointer-events-none transition-all">
+        <div class="glass-morphism rounded-xl w-full max-w-md mx-4 transform scale-95 transition-all p-6">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h3
+                        class="text-2xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+                        Command Cooldown
+                    </h3>
+                    <p class="text-sm text-gray-400 mt-1">Set the cooldown duration for this command</p>
+                </div>
+                <button onclick="closeCooldownModal()"
+                    class="p-2 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-all">
+                    <i class="mdi mdi-close text-xl"></i>
+                </button>
+            </div>
+
+            <div class="space-y-6">
+                <div class="space-y-2">
+                    <label class="text-sm font-medium text-gray-300">Cooldown Duration</label>
+                    <div class="relative">
+                        <input type="number" id="cooldownValue" min="0" step="1" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-lg 
+                            focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all outline-none
+                            placeholder-gray-500" placeholder="Enter duration in seconds" />
+                        <div class="absolute right-4 top-4 text-gray-400">
+                            <i class="mdi mdi-timer text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-4">
+                    <button onclick="closeCooldownModal()" class="px-6 py-2.5 rounded-lg border border-white/10 hover:bg-white/5 
+                        text-gray-300 hover:text-white transition-all text-sm font-medium">
+                        Cancel
+                    </button>
+                    <button onclick="saveCooldown()" class="px-6 py-2.5 rounded-lg bg-purple-500 hover:bg-purple-600 text-white 
+                        transition-all text-sm font-medium flex items-center gap-2">
+                        <i class="mdi mdi-content-save"></i>
+                        Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="prefixConfigModal"
+        class="fixed inset-0 modal-backdrop z-50 flex items-center justify-center opacity-0 pointer-events-none transition-all">
+        <div class="glass-morphism rounded-xl w-full max-w-md mx-4 transform scale-95 transition-all p-6">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h3
+                        class="text-2xl font-bold bg-gradient-to-r from-blue-400 to-violet-400 bg-clip-text text-transparent">
+                        Prefix Configuration
+                    </h3>
+                    <p class="text-sm text-gray-400 mt-1">Configure your bot's command prefix</p>
+                </div>
+                <button onclick="closePrefixConfigModal()"
+                    class="p-2 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-all">
+                    <i class="mdi mdi-close text-xl"></i>
+                </button>
+            </div>
+
+            <div class="space-y-6">
+                <div class="space-y-2">
+                    <label class="text-sm font-medium text-gray-300">Command Prefix</label>
+                    <div class="relative">
+                        <input type="text" id="prefixValue" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-lg 
+                            focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none
+                            placeholder-gray-500" placeholder="Enter prefix (e.g. !)" />
+                        <div class="absolute right-4 top-4 text-gray-400">
+                            <span class="text-xl">!</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-4">
+                    <button onclick="closePrefixConfigModal()" class="px-6 py-2.5 rounded-lg border border-white/10 hover:bg-white/5 
+                        text-gray-300 hover:text-white transition-all text-sm font-medium">
+                        Cancel
+                    </button>
+                    <button onclick="savePrefix()" class="px-6 py-2.5 rounded-lg bg-blue-500 hover:bg-blue-600 text-white 
+                        transition-all text-sm font-medium flex items-center gap-2">
+                        <i class="mdi mdi-content-save"></i>
+                        Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="settingsModal"
+        class="fixed inset-0 modal-backdrop z-50 flex items-center justify-center opacity-0 pointer-events-none transition-all">
+        <div class="glass-morphism rounded-xl w-full max-w-2xl mx-4 transform scale-95 transition-all p-6">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h3
+                        class="text-2xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+                        Dashboard Settings
+                    </h3>
+                    <p class="text-sm text-gray-400 mt-1">Configure your bot dashboard preferences</p>
+                </div>
+                <button onclick="closeSettingsModal()"
+                    class="p-2 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-all">
+                    <i class="mdi mdi-close text-xl"></i>
+                </button>
+            </div>
+
+            <div class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <h4 class="text-lg font-medium text-gray-200">Appearance</h4>
+                        <div class="space-y-2">
+                            <label class="flex items-center justify-between cursor-pointer">
+                                <span class="text-sm text-gray-300">Dark Mode</span>
+                                <div class="relative">
+                                    <input type="checkbox" class="sr-only" checked>
+                                    <div class="w-10 h-5 bg-white/10 rounded-full"></div>
+                                    <div
+                                        class="dot absolute left-0.5 top-0.5 bg-purple-500 w-4 h-4 rounded-full transition-transform translate-x-5">
+                                    </div>
+                                </div>
+                            </label>
+                            <label class="flex items-center justify-between cursor-pointer">
+                                <span class="text-sm text-gray-300">Compact Mode</span>
+                                <div class="relative">
+                                    <input type="checkbox" class="sr-only">
+                                    <div class="w-10 h-5 bg-white/10 rounded-full"></div>
+                                    <div
+                                        class="dot absolute left-0.5 top-0.5 bg-gray-400 w-4 h-4 rounded-full transition-transform">
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <h4 class="text-lg font-medium text-gray-200">Notifications</h4>
+                        <div class="space-y-2">
+                            <label class="flex items-center justify-between cursor-pointer">
+                                <span class="text-sm text-gray-300">Command Updates</span>
+                                <div class="relative">
+                                    <input type="checkbox" class="sr-only" checked>
+                                    <div class="w-10 h-5 bg-white/10 rounded-full"></div>
+                                    <div
+                                        class="dot absolute left-0.5 top-0.5 bg-purple-500 w-4 h-4 rounded-full transition-transform translate-x-5">
+                                    </div>
+                                </div>
+                            </label>
+                            <label class="flex items-center justify-between cursor-pointer">
+                                <span class="text-sm text-gray-300">Error Alerts</span>
+                                <div class="relative">
+                                    <input type="checkbox" class="sr-only" checked>
+                                    <div class="w-10 h-5 bg-white/10 rounded-full"></div>
+                                    <div
+                                        class="dot absolute left-0.5 top-0.5 bg-purple-500 w-4 h-4 rounded-full transition-transform translate-x-5">
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <h4 class="text-lg font-medium text-gray-200">Bot Information</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-gray-300">Bot Name</label>
+                            <input type="text" value="<%= client.user.username %>"
+                                class="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 text-sm 
+                                focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all outline-none" />
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-gray-300">Default Prefix</label>
+                            <input type="text" id="defaultPrefixValue" value="!"
+                                class="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 text-sm 
+                                focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all outline-none" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-white/10">
+                    <div class="flex justify-end gap-3">
+                        <button onclick="closeSettingsModal()" class="px-6 py-2.5 rounded-lg border border-white/10 hover:bg-white/5 
+                            text-gray-300 hover:text-white transition-all text-sm font-medium">
+                            Cancel
+                        </button>
+                        <button onclick="saveSettings()" class="px-6 py-2.5 rounded-lg bg-purple-500 hover:bg-purple-600 text-white 
+                            transition-all text-sm font-medium flex items-center gap-2">
+                            <i class="mdi mdi-content-save"></i>
+                            Save Changes
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="ws-status"
+        class="fixed bottom-4 right-4 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-sm hidden">
+        Connected to WebSocket
+    </div>
+
+    <script src="/js/dashboard.js"></script>
+    <script>
+        function confirmShutdown() {
+            Swal.fire({
+                ...SwalConfig,
+                title: 'Shutdown Bot?',
+                text: 'This action will take the bot offline. Are you sure?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Shutdown',
+                cancelButtonText: 'Cancel',
+                customClass: {
+                    ...SwalConfig.customClass,
+                    confirmButton: 'bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 hover:text-red-300 px-4 py-2 rounded-lg transition-all',
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Shutting down...',
+                        text: 'The bot is going offline',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        },
+                        customClass: SwalConfig.customClass
+                    });
+
+                    fetch("/api/shutdown", { method: "POST" })
+                        .then(response => response.json())
+                        .then(() => {
+                            Swal.fire({
+                                ...SwalConfig,
+                                title: 'Bot is shutting down...',
+                                text: 'The bot is now going offline',
+                                icon: 'success',
+                                timer: 3000,
+                                showConfirmButton: false
+                            });
+                        });
+                }
+            });
+        }
+        
+        const ws = new WebSocket(`ws://${window.location.host}`);
+
+        ws.onopen = function () {
+            console.log("WebSocket connection established");
+            document.getElementById('ws-status').classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('ws-status').classList.add('hidden');
+            }, 3000);
+        };
+
+        ws.onmessage = function (event) {
+            try {
+                const data = JSON.parse(event.data);
+                if (data.type === 'stats') {
+                    const { memoryUsage, uptime, ping, guilds, users, commands, prefixCommands } = data.data;
+                    document.querySelector('.stat-item:first-child .text-violet-400').textContent = memoryUsage;
+                    document.querySelector('.stat-item:last-child .text-emerald-400').textContent = uptime;
+                    document.getElementById('ping-value').textContent = `${ping}ms`;
+                    document.getElementById('guilds-stat').textContent = guilds;
+                    document.getElementById('users-stat').textContent = users;
+                    document.getElementById('commands-stat').textContent = commands;
+                    document.getElementById('prefixCommands-stat').textContent = prefixCommands;
+                }
+            } catch (error) {
+                console.error("Error parsing WebSocket message:", error);
+            }
+        };
+
+        ws.onerror = function (error) {
+            console.error("WebSocket encountered error:", error);
+        };
+
+        ws.onclose = function () {
+            console.log("WebSocket connection closed, reconnecting in 5 seconds");
+            setTimeout(() => {
+                window.location.reload();
+            }, 5000);
+        };
+
+        function toggleSidebar() {
+            document.querySelector('.sidebar').classList.toggle('active');
+            document.getElementById('mobileOverlay').classList.toggle('active');
+        }
+
+        document.getElementById('mobileOverlay').addEventListener('click', toggleSidebar);
+
+        function showLoading() {
+            const container = document.getElementById('commands-container');
+            container.innerHTML = Array(6).fill().map(() => `
+                <div class="glass-morphism rounded-lg p-6 loading-shimmer">
+                    <div class="h-6 w-1/3 bg-white/5 rounded mb-4"></div>
+                    <div class="h-4 w-2/3 bg-white/5 rounded mb-2"></div>
+                    <div class="h-4 w-1/2 bg-white/5 rounded"></div>
+                </div>
+            `).join('');
+        }
+
+        tippy('[data-tippy-content]', {
+            theme: 'dark',
+            animation: 'shift-away'
+        });
+
+        function switchCommandView(type) {
+            const slashView = document.getElementById('slash-commands-view');
+            const prefixView = document.getElementById('prefix-commands-view');
+            const buttons = document.querySelectorAll('.command-view-btn');
+
+            buttons.forEach(btn => {
+                btn.classList.toggle('active',
+                    btn.textContent.toLowerCase().includes(type));
+            });
+
+            if (type === 'slash') {
+                slashView.classList.remove('hidden');
+                prefixView.classList.add('hidden');
+            } else {
+                slashView.classList.add('hidden');
+                prefixView.classList.remove('hidden');
+            }
+        }
+
+        ws.onmessage = function (event) {
+            try {
+                const data = JSON.parse(event.data);
+                if (data.type === 'stats') {
+                    document.getElementById('slash-commands-stat').textContent =
+                        data.stats.slashCommands;
+                    document.getElementById('prefix-commands-stat').textContent =
+                        data.stats.prefixCommands;
+                }
+            } catch (error) {
+                console.error("WebSocket message error:", error);
+            }
+        };
+
+        document.querySelectorAll('.dot').forEach(dot => {
+            const checkbox = dot.parentElement.querySelector('input[type="checkbox"]');
+
+            checkbox.addEventListener('change', function () {
+                if (this.checked) {
+                    dot.classList.add('translate-x-5');
+                    dot.classList.replace('bg-gray-400', 'bg-purple-500');
+                } else {
+                    dot.classList.remove('translate-x-5');
+                    dot.classList.replace('bg-purple-500', 'bg-gray-400');
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
