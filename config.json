@@ -1,0 +1,14 @@
+{
+  "token": [
+    ""
+  ],
+  "devGuild": "",
+  "mongoURL": "",
+  "sqliteFileName": "",
+  "prefix": "",
+  "dashboardPort": "",
+  "packageManager": "",
+  "whitelistedPackages": [
+    ""
+  ]
+}
